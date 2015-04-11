@@ -91,66 +91,66 @@ OP_TemplatePair* OBJ_FabricDFG::buildTemplatePair(OP_TemplatePair* prevstuff)
     return geo;
 }
 
-int OBJ_FabricDFG::applyInputIndependentTransform(OP_Context &context, UT_DMatrix4 &mat)
+int OBJ_FabricDFG::applyInputIndependentTransform(OP_Context& context, UT_DMatrix4& mat)
 {
-    fpreal now = context.getTime();
-
-    // call OBJ_Geometry::applyInputIndependentTransform() so that we don't
-    // lose any information
-    int modified = OBJ_Geometry::applyInputIndependentTransform(context, mat);
-
-    loadGraph();
-
-    setMultiParameterInputPorts(now);
-    getView().getBinding()->execute();
-
-
-    FabricServices::DFGWrapper::Port port = getView().getGraph().getPort("t");
-    if(port.isValid() && port.getDataType() == "Vec3")
+    try
     {
-        float t[3];
-        std::vector<FabricCore::RTVal> args(2);
-        args[0] =
-            FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &t);
-        args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
+        // call OBJ_Geometry::applyInputIndependentTransform() so that we don't
+        // lose any information
+        int modified = OBJ_Geometry::applyInputIndependentTransform(context, mat);
 
-        port.getRTVal().callMethod("", "get", 2, &args[0]);
-        mat.pretranslate(t[0], t[1], t[2]);
+        loadGraph();
+        fpreal now = context.getTime();
+        setMultiParameterInputPorts(now);
+        executeGraph();
+
+        FabricServices::DFGWrapper::Port port = getView().getGraph().getPort("t");
+        if (port.isValid() && port.getDataType() == "Vec3")
+        {
+            float t[3];
+            std::vector<FabricCore::RTVal> args(2);
+            args[0] = FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &t);
+            args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
+
+            port.getRTVal().callMethod("", "get", 2, &args[0]);
+            mat.pretranslate(t[0], t[1], t[2]);
+        }
+
+        port = getView().getGraph().getPort("r");
+        if (port.isValid() && port.getDataType() == "Vec3")
+        {
+            float r[3];
+            std::vector<FabricCore::RTVal> args(2);
+            args[0] = FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &r);
+            args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
+
+            port.getRTVal().callMethod("", "get", 2, &args[0]);
+            mat.prerotate(r[0], r[1], r[2], UT_XformOrder());
+        }
+
+        port = getView().getGraph().getPort("s");
+        if (port.isValid() && port.getDataType() == "Vec3")
+        {
+            float s[3];
+            std::vector<FabricCore::RTVal> args(2);
+            args[0] = FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &s);
+            args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
+
+            port.getRTVal().callMethod("", "get", 2, &args[0]);
+            mat.prescale(s[0], s[1], s[2]);
+        }
+
+        flags().setTimeDep(true);
+
+        // return 1 to indicate that we have modified the input matrix.
+        // if we didn't modify mat, then we should return 0 instead.
+        return 1;
     }
-
-    port = getView().getGraph().getPort("r");
-    if(port.isValid() && port.getDataType() == "Vec3")
+    catch (FabricCore::Exception e)
     {
-        float r[3];
-        std::vector<FabricCore::RTVal> args(2);
-        args[0] =
-            FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &r);
-        args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
-
-        port.getRTVal().callMethod("", "get", 2, &args[0]);
-        mat.prerotate(r[0], r[1], r[2], UT_XformOrder());
+        printf("FabricCore::Exception from OBJ_FabricDFG::applyInputIndependentTransform:\n %s\n", e.getDesc_cstr());
+        return 0;
     }
-
-    port = getView().getGraph().getPort("s");
-    if(port.isValid() && port.getDataType() == "Vec3")
-    {
-        float s[3];
-        std::vector<FabricCore::RTVal> args(2);
-        args[0] =
-            FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &s);
-        args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
-
-        port.getRTVal().callMethod("", "get", 2, &args[0]);
-        mat.prescale(s[0], s[1], s[2]);
-    }
-
-    modified = 1;
-
-    flags().setTimeDep(true);
-
-    // return 1 to indicate that we have modified the input matrix.
-    // if we didn't modify mat, then we should return 0 instead.
-    return 1;
 }
 
 // OP_ERROR OBJ_FabricDFG::cookMyObj(OP_Context& context)
@@ -176,7 +176,6 @@ int OBJ_FabricDFG::applyInputIndependentTransform(OP_Context &context, UT_DMatri
 //     // setMultiParameterInputPorts(now);
 //     // getView().getBinding()->execute();
 
-
 //     // const FabricDFGView::OutputPortsNames& outPortsMat44Names = getView().getOutputPortsMat44Names();
 //     // if (outPortsMat44Names.size() > 0)
 //     // {
@@ -186,7 +185,8 @@ int OBJ_FabricDFG::applyInputIndependentTransform(OP_Context &context, UT_DMatri
 //     //         std::vector<float> comp(16);
 //     //         std::vector<FabricCore::RTVal> args(2);
 //     //         args[0] =
-//     //             FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", comp.size(), &comp[0]);
+//     //             FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", comp.size(),
+//     &comp[0]);
 //     //         args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0);
 
 //     //         try

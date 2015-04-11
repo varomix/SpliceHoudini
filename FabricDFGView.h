@@ -26,6 +26,7 @@ class FabricDFGView : public FabricServices::DFGWrapper::View
 public:
     typedef std::vector<std::string> ParameterPortsNames;
     typedef std::vector<std::string> OutputPortsNames;
+    typedef std::vector<FabricServices::DFGWrapper::Port> OutputPorts;
 
     FabricDFGView(OP_Node* op);
     ~FabricDFGView();
@@ -46,7 +47,7 @@ public:
 
     // persistence
     std::string getJSON();
-    bool setFromJSON(const std::string& json);
+    void setFromJSON(const std::string& json);
 
     // logging.
     static void setLogFunc(void (*in_logFunc)(void*, const char*, unsigned int));
@@ -152,20 +153,21 @@ public:
         return m_inVec3Names;
     }
 
-    FabricCore::RTVal getPolygonMeshRTVal(const char* name);
-    const OutputPortsNames& getOutputPortsPolygonMeshNames() const
-    {
-        return m_outPolygonMeshNames;
-    }
-
     FabricCore::RTVal getMat44RTVal(const char* name);
     const OutputPortsNames& getOutputPortsMat44Names() const
     {
         return m_outMat44Names;
     }
 
+    OutputPorts getPolygonMeshPorts() const
+    {
+        return m_outPolyMeshPorts;
+    }
+
 private:
     void storeParameterPortsNames();
+    void storeOutputPolymeshPorts();
+
     ParameterPortsNames m_inSInt32Names;
     ParameterPortsNames m_inFloat32Names;
     ParameterPortsNames m_inStringNames;
@@ -175,6 +177,8 @@ private:
 
     OutputPortsNames m_outPolygonMeshNames;
     OutputPortsNames m_outMat44Names;
+
+    OutputPorts m_outPolyMeshPorts;
 
     FabricDFGWidgetPtr m_widget;
     OP_Node* m_op;

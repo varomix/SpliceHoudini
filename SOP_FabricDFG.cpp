@@ -36,9 +36,6 @@ SOP_FabricDFG::~SOP_FabricDFG()
 
 OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
 {
-    loadGraph();
-
-    gdp->clearAndDestroy();
 
     // Start the interrupt server
     UT_AutoInterrupt boss("Evaluating FabricDFG");
@@ -47,102 +44,102 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
         return error();
     }
 
-    fpreal now = context.getTime();
-    
-    setMultiParameterInputPorts(now);
-    
     try
     {
-        getView().getBinding()->execute();
+        loadGraph();
+        fpreal now = context.getTime();
+        setMultiParameterInputPorts(now);
+        executeGraph();
+
+        gdp->clearAndDestroy();
+
+        FabricDFGView::OutputPorts outPortsPolyMesh = getView().getPolygonMeshPorts();
+        if (outPortsPolyMesh.size() > 0)
+        {
+            FabricCore::RTVal rtMesh = outPortsPolyMesh[0].getRTVal();
+
+            size_t nbPoints = 0;
+            size_t nbPolygons = 0;
+            size_t nbSamples = 0;
+            if (rtMesh.isValid() && !rtMesh.isNullObject())
+            {
+                nbPoints = rtMesh.callMethod("UInt64", "pointCount", 0, 0).getUInt64();
+                nbPolygons = rtMesh.callMethod("UInt64", "polygonCount", 0, 0).getUInt64();
+                nbSamples = rtMesh.callMethod("UInt64", "polygonPointsCount", 0, 0).getUInt64();
+
+                if (nbPoints == 0 || nbPolygons == 0 || nbSamples == 0)
+                {
+                    return error();
+                }
+
+                std::vector<Imath::Vec3<float> > positions(nbPoints);
+                {
+                    std::vector<FabricCore::RTVal> args(2);
+                    args[0] = FabricCore::RTVal::ConstructExternalArray(
+                        *(getView().getClient()), "Float32", positions.size() * 3, &positions[0]);
+                    args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 3); // components
+
+                    try
+                    {
+                        rtMesh.callMethod("", "getPointsAsExternalArray", 2, &args[0]);
+                    }
+                    catch (FabricCore::Exception e)
+                    {
+                        FabricCore::Exception::Throw(e.getDesc_cstr());
+                    }
+                }
+
+                std::vector<int> faceCounts(nbPolygons);
+                std::vector<int> elementsIndices(nbSamples);
+                {
+                    std::vector<FabricCore::RTVal> args(2);
+                    args[0] = FabricCore::RTVal::ConstructExternalArray(
+                        *(getView().getClient()), "UInt32", faceCounts.size(), &faceCounts[0]);
+                    args[1] = FabricCore::RTVal::ConstructExternalArray(
+                        *(getView().getClient()), "UInt32", elementsIndices.size(), &elementsIndices[0]);
+
+                    try
+                    {
+                        rtMesh.callMethod("", "getTopologyAsCountsIndicesExternalArrays", 2, &args[0]);
+                    }
+                    catch (FabricCore::Exception e)
+                    {
+                        FabricCore::Exception::Throw(e.getDesc_cstr());
+                    }
+                }
+
+                // Create points
+                GA_Offset ptoff = gdp->appendPointBlock(nbPoints);
+
+                // Set points positions
+                size_t i = 0;
+                GA_FOR_ALL_PTOFF(gdp, ptoff)
+                {
+                    UT_Vector3 p(positions[i].x, positions[i].y, positions[i].z);
+                    gdp->setPos3(ptoff, p);
+                    ++i;
+                }
+
+                // Build polygons using buildBlock function
+                exint startpoint = 0;
+                exint nfaces = static_cast<exint>(faceCounts.size());
+                GEO_PolyCounts polyCounts;
+
+                for (exint i = 0; i < nfaces; ++i)
+                {
+                    polyCounts.append(faceCounts[i]);
+                }
+
+                GU_PrimPoly::buildBlock(gdp, GA_Offset(startpoint), nbPoints, polyCounts, &elementsIndices[0]);
+
+                select(GU_SPrimitive);
+            }
+        }
     }
     catch (FabricCore::Exception e)
     {
-        printf("FabricCore::Exception: %s\n", e.getDesc_cstr());
-    }    
-
-    const FabricDFGView::OutputPortsNames& outPortsPolyMeshNames = getView().getOutputPortsPolygonMeshNames();
-    if (outPortsPolyMeshNames.size() > 0)
-    {
-        FabricCore::RTVal rtMesh = getView().getPolygonMeshRTVal(outPortsPolyMeshNames[0].c_str());
-
-        size_t nbPoints = 0;
-        size_t nbPolygons = 0;
-        size_t nbSamples = 0;
-        if (rtMesh.isValid() && !rtMesh.isNullObject())
-        {
-            nbPoints = rtMesh.callMethod("UInt64", "pointCount", 0, 0).getUInt64();
-            nbPolygons = rtMesh.callMethod("UInt64", "polygonCount", 0, 0).getUInt64();
-            nbSamples = rtMesh.callMethod("UInt64", "polygonPointsCount", 0, 0).getUInt64();
-
-            if (nbPoints == 0 || nbPolygons == 0 || nbSamples == 0)
-            {
-                return error();
-            }
-
-            std::vector<Imath::Vec3<float> > positions(nbPoints);
-            {
-                std::vector<FabricCore::RTVal> args(2);
-                args[0] = FabricCore::RTVal::ConstructExternalArray(
-                    *(getView().getClient()), "Float32", positions.size() * 3, &positions[0]);
-                args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 3); // components
-
-                try
-                {
-                    rtMesh.callMethod("", "getPointsAsExternalArray", 2, &args[0]);
-                }
-                catch (FabricCore::Exception e)
-                {
-                    printf("Error: %s\n", e.getDesc_cstr());
-                    return error();
-                }
-            }
-
-            std::vector<int> faceCounts(nbPolygons);
-            std::vector<int> elementsIndices(nbSamples);
-            {
-                std::vector<FabricCore::RTVal> args(2);
-                args[0] = FabricCore::RTVal::ConstructExternalArray(
-                    *(getView().getClient()), "UInt32", faceCounts.size(), &faceCounts[0]);
-                args[1] = FabricCore::RTVal::ConstructExternalArray(
-                    *(getView().getClient()), "UInt32", elementsIndices.size(), &elementsIndices[0]);
-
-                try
-                {
-                    rtMesh.callMethod("", "getTopologyAsCountsIndicesExternalArrays", 2, &args[0]);
-                }
-                catch (FabricCore::Exception e)
-                {
-                    printf("Error: %s\n", e.getDesc_cstr());
-                    return error();
-                }
-            }
-
-            // Create points
-            GA_Offset ptoff = gdp->appendPointBlock(nbPoints);
-
-            // Set points positions
-            size_t i = 0;
-            GA_FOR_ALL_PTOFF(gdp, ptoff)
-            {
-                UT_Vector3 p(positions[i].x, positions[i].y, positions[i].z);
-                gdp->setPos3(ptoff, p);
-                ++i;
-            }
-
-            // Build polygons using buildBlock function
-            exint startpoint = 0;
-            exint nfaces = static_cast<exint>(faceCounts.size());
-            GEO_PolyCounts polyCounts;
-
-            for (exint i = 0; i < nfaces; ++i)
-            {
-                polyCounts.append(faceCounts[i]);
-            }
-
-            GU_PrimPoly::buildBlock(gdp, GA_Offset(startpoint), nbPoints, polyCounts, &elementsIndices[0]);
-
-            select(GU_SPrimitive);
-        }
+        printf("FabricCore::Exception from SOP_FabricDFG::cookMySop:\n %s\n", e.getDesc_cstr());
+        return error();
     }
 
     return error();

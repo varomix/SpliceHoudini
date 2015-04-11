@@ -144,20 +144,19 @@ std::string FabricDFGView::getJSON()
     return "";
 }
 
-bool FabricDFGView::setFromJSON(const std::string& json)
+void FabricDFGView::setFromJSON(const std::string& json)
 {
     try
     {
         m_binding = s_host->createBindingFromJSON(json.c_str());
         setGraph(m_binding.getGraph());
         storeParameterPortsNames();
+        storeOutputPolymeshPorts();
     }
     catch (FabricCore::Exception e)
     {
-        printf("Error: %s\n", e.getDesc_cstr());
-        return false;
+        FabricCore::Exception::Throw((std::string("[FabricDFGView::setFromJSON: ") + e.getDesc_cstr()).c_str());
     }
-    return true;
 }
 
 void FabricDFGView::setLogFunc(void (*in_logFunc)(void*, const char*, unsigned int))
@@ -210,7 +209,7 @@ void FabricDFGView::onPortInserted(FabricServices::DFGWrapper::Port port)
         break;
     case FabricCore::DFGPortType_Out:
         if (port.getDataType() == "PolygonMesh")
-            m_outPolygonMeshNames.push_back(port.getName());
+            m_outPolyMeshPorts.push_back(port);
 
         else if (port.getDataType() == "Mat44")
             m_outMat44Names.push_back(port.getName());
@@ -280,7 +279,7 @@ void FabricDFGView::onPortRemoved(FabricServices::DFGWrapper::Port port)
         m_op->setString(UT_String(getJSON().c_str()), CH_STRING_LITERAL, "jsonData", 0, 0);
 }
 
-// To mov
+// To move
 void FabricDFGView::storeParameterPortsNames()
 {
     std::vector<DFGWrapper::Port> ports = m_binding.getGraph().getPorts();
@@ -318,6 +317,16 @@ void FabricDFGView::storeParameterPortsNames()
 
         //     break;
         // }
+    }
+}
+
+void FabricDFGView::storeOutputPolymeshPorts()
+{
+    std::vector<DFGWrapper::Port> ports = m_binding.getGraph().getPorts();
+    for (std::vector<DFGWrapper::Port>::iterator it = ports.begin(); it != ports.end(); it++)
+    {
+        if (it->getPortType() == FabricCore::DFGPortType_Out && it->getDataType() == "PolygonMesh")
+            m_outPolyMeshPorts.push_back(*it);
     }
 }
 
@@ -374,12 +383,6 @@ void FabricDFGView::setVec3PortValue(const char* name, const Imath::Vec3<float>&
         FabricCore::RTVal rtVal = FabricCore::RTVal::Construct(*getClient(), "Vec3", 3, rtVec);
         port.setRTVal(rtVal);
     }
-}
-
-FabricCore::RTVal FabricDFGView::getPolygonMeshRTVal(const char* name)
-{
-    FabricCore::RTVal rtVal = m_binding.getGraph().getPort(name).getRTVal();
-    return rtVal;
 }
 
 FabricCore::RTVal FabricDFGView::getMat44RTVal(const char* name)

@@ -69,6 +69,7 @@ protected:
     }
 
     void loadGraph();
+    void executeGraph();
     void setMultiParameterInputPorts(const fpreal t);
 
     bool m_graphLoaded;

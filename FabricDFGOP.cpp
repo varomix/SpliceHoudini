@@ -102,13 +102,15 @@ int FabricDFGOP<OP>::createGraphCallback(void* data, int index, float time, cons
         }
 
         const FabricDFGView::ParameterPortsNames& stringInputs = op->m_view.getInputPortsStringNames();
-        for (FabricDFGView::ParameterPortsNames::const_iterator it = stringInputs.begin(); it != stringInputs.end(); it++)
+        for (FabricDFGView::ParameterPortsNames::const_iterator it = stringInputs.begin(); it != stringInputs.end();
+             it++)
         {
             MultiParams::addStringParameterInst(op, *it);
         }
 
         const FabricDFGView::ParameterPortsNames& filePathInputs = op->m_view.getInputPortsFilePathNames();
-        for (FabricDFGView::ParameterPortsNames::const_iterator it = filePathInputs.begin(); it != filePathInputs.end(); it++)
+        for (FabricDFGView::ParameterPortsNames::const_iterator it = filePathInputs.begin(); it != filePathInputs.end();
+             it++)
         {
             MultiParams::addStringParameterInst(op, *it, "FilePath");
         }
@@ -117,7 +119,7 @@ int FabricDFGOP<OP>::createGraphCallback(void* data, int index, float time, cons
         for (FabricDFGView::ParameterPortsNames::const_iterator it = vec3Inputs.begin(); it != vec3Inputs.end(); it++)
         {
             MultiParams::addVec3ParameterInst(op, *it, Imath::Vec3<float>(0));
-        }        
+        }
     }
 
     return 1;
@@ -133,12 +135,14 @@ int FabricDFGOP<OP>::openGraphButtonCallback(void* data, int index, float time, 
 
 template <typename OP>
 PRM_Template FabricDFGOP<OP>::myTemplateList[] = {
-    groupTemplate,                        jsonFilePathTemplate,               jsonDataTemplate,
-    portsChangedTemplate,                 createGraphTemplate,                openGraphButtonTemplate,
+    groupTemplate,                          jsonFilePathTemplate,
+    jsonDataTemplate,                       portsChangedTemplate,
+    createGraphTemplate,                    openGraphButtonTemplate,
     currentFrameTemplate,
 
-    MultiParams::Float32PortsMultiTemplate, MultiParams::SInt32PortsMultiTemplate, MultiParams::StringPortsMultiTemplate,
-    MultiParams::FilePathPortsMultiTemplate, MultiParams::Vec3PortsMultiTemplate,
+    MultiParams::Float32PortsMultiTemplate, MultiParams::SInt32PortsMultiTemplate,
+    MultiParams::StringPortsMultiTemplate,  MultiParams::FilePathPortsMultiTemplate,
+    MultiParams::Vec3PortsMultiTemplate,
 
     PRM_Template()
 };
@@ -162,11 +166,34 @@ void FabricDFGOP<OP>::loadGraph()
 {
     if (!m_graphLoaded)
     {
-        UT_String jsonData = getStringValue("jsonData");
-        getView().setFromJSON(jsonData.buffer());
-        // @! Even if loading the graph failed, we set to true.
-        // This is because currently, loading graph several time can fail  
+        // @! Set to true even if loading the graph failed.
+        // This is because currently, loading the graph several times can fail
+        // with error like "Error: getDesc(path): no port, graph or function named 'size'"
         m_graphLoaded = true;
+
+        UT_String jsonData = getStringValue("jsonData");
+        try
+        {
+            getView().setFromJSON(jsonData.buffer());
+        }
+        catch (FabricCore::Exception e)
+        {
+            FabricCore::Exception::Throw((std::string("[FabricDFGOP<OP>::loadGraph]: ") + e.getDesc_cstr()).c_str());
+        }
+
+    }
+}
+
+template <typename OP>
+void FabricDFGOP<OP>::executeGraph()
+{
+    try
+    {
+        getView().getBinding()->execute();
+    }
+    catch (FabricCore::Exception e)
+    {
+        FabricCore::Exception::Throw((std::string("[FabricDFGOP<OP>::executeGraph]: ") + e.getDesc_cstr()).c_str());
     }
 }
 
@@ -217,9 +244,9 @@ void FabricDFGOP<OP>::setMultiParameterInputPorts(const fpreal t)
     for (size_t i = 0; i < num_param_instances; ++i)
     {
         getView().setVec3PortValue(MultiParams::getParameterInstVec3Name(this, instance_idx),
-                                       MultiParams::getParameterInstVec3Value(this, instance_idx, t));
+                                   MultiParams::getParameterInstVec3Value(this, instance_idx, t));
         instance_idx++;
-    }    
+    }
 }
 
 // Specializations for Houdini operator using Fabric
