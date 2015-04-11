@@ -50,7 +50,15 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
     fpreal now = context.getTime();
     
     setMultiParameterInputPorts(now);
-    getView().getBinding()->execute();
+    
+    try
+    {
+        getView().getBinding()->execute();
+    }
+    catch (FabricCore::Exception e)
+    {
+        printf("FabricCore::Exception: %s\n", e.getDesc_cstr());
+    }    
 
     const FabricDFGView::OutputPortsNames& outPortsPolyMeshNames = getView().getOutputPortsPolygonMeshNames();
     if (outPortsPolyMeshNames.size() > 0)

@@ -42,14 +42,9 @@ FabricDFGView::FabricDFGView(OP_Node* op)
             // create a host for Canvas
             s_host = new DFGWrapper::Host(s_client);
 
-            // create an empty binding
-            m_binding = s_host->createBindingToNewGraph();
-
             // create KL AST manager
             s_manager = new ASTWrapper::KLASTManager(&s_client);
 
-            // set the graph on the view
-            setGraph(m_binding.getGraph());
         }
         catch (FabricCore::Exception e)
         {
@@ -58,6 +53,12 @@ FabricDFGView::FabricDFGView(OP_Node* op)
     }
 
     s_instances.insert(std::pair<unsigned int, FabricDFGView*>(m_id, this));
+    
+    // create an empty binding
+    m_binding = s_host->createBindingToNewGraph();
+
+    // set the graph on the view
+    setGraph(m_binding.getGraph());
 
     m_parameterPortsMap["SInt32"] = &m_inSInt32Names;
     m_parameterPortsMap["Float32"] = &m_inFloat32Names;
@@ -220,7 +221,7 @@ void FabricDFGView::onPortInserted(FabricServices::DFGWrapper::Port port)
     int val = m_op->evalInt("__portsChanged", 0, 0);
     m_op->setInt("__portsChanged", 0, 0, (val + 1) % 2);
 
-    // m_op->setString(UT_String(getJSON().c_str()), CH_STRING_LITERAL, "jsonData", 0, 0);
+    m_op->setString(UT_String(getJSON().c_str()), CH_STRING_LITERAL, "jsonData", 0, 0);
 }
 
 void FabricDFGView::onPortRenamed(FabricServices::DFGWrapper::Port port, const char* oldName)

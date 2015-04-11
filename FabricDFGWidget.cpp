@@ -71,14 +71,12 @@ void FabricDFGWidget::onRecompilation()
 {
     m_op->setString(UT_String(m_view->getJSON().c_str()), CH_STRING_LITERAL, "jsonData", 0, 0);
 
-    // Probably useless now
     int val = m_op->evalInt("__portsChanged", 0, 0);
     m_op->setInt("__portsChanged", 0, 0, (val + 1) % 2);
 }
 
 void FabricDFGWidget::onPortRenamed(QString path, QString newName)
 {
-    // ... rename the dynamic attribute also in modo
 }
 
 } // End namespace OpenSpliceHoudini

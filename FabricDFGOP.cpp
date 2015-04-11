@@ -21,6 +21,7 @@ FabricDFGOP<OP>::FabricDFGOP(OP_Network* net, const char* name, OP_Operator* op)
     , m_ui(this, m_view)
 {
     OP::getParm("__portsChanged").getTemplatePtr()->setInvisible(true);
+    OP::getParm("jsonData").getTemplatePtr()->setInvisible(true);
     OP::getParm("currentFrame").setExpression(0, "$F", CH_OLD_EXPR_LANGUAGE, 0);
     OP::getParm("currentFrame").setLockedFlag(0, 1);
     OP::getParm("currentFrame").getTemplatePtr()->setInvisible(true);
@@ -87,7 +88,6 @@ int FabricDFGOP<OP>::createGraphCallback(void* data, int index, float time, cons
         UT_String jsonData = op->getStringValue("jsonData");
 
         op->m_view.setFromJSON(jsonData.buffer());
-        // op->m_view.setFromJSON(buffer.str());
 
         const FabricDFGView::ParameterPortsNames& intInputs = op->m_view.getInputPortsSInt32Names();
         for (FabricDFGView::ParameterPortsNames::const_iterator it = intInputs.begin(); it != intInputs.end(); it++)
@@ -107,7 +107,7 @@ int FabricDFGOP<OP>::createGraphCallback(void* data, int index, float time, cons
             MultiParams::addStringParameterInst(op, *it);
         }
 
-        const FabricDFGView::ParameterPortsNames& filePathInputs = op->m_view.getInputPortsStringNames();
+        const FabricDFGView::ParameterPortsNames& filePathInputs = op->m_view.getInputPortsFilePathNames();
         for (FabricDFGView::ParameterPortsNames::const_iterator it = filePathInputs.begin(); it != filePathInputs.end(); it++)
         {
             MultiParams::addStringParameterInst(op, *it, "FilePath");
@@ -163,10 +163,10 @@ void FabricDFGOP<OP>::loadGraph()
     if (!m_graphLoaded)
     {
         UT_String jsonData = getStringValue("jsonData");
-        if (jsonData != 0)
-        {
-            // m_graphLoaded = getView().setFromJSON(jsonData.buffer());
-        }
+        getView().setFromJSON(jsonData.buffer());
+        // @! Even if loading the graph failed, we set to true.
+        // This is because currently, loading graph several time can fail  
+        m_graphLoaded = true;
     }
 }
 

@@ -27,7 +27,7 @@ class OP_FabricDFG_OBJ : public OP_Operator
 {
 public:
     OP_FabricDFG_OBJ()
-        : OP_Operator("fabricDFG_OBJ",                     // Internal name
+        : OP_Operator("fabricDFG",                     // Internal name
                       "Fabric Data Flow Graph",            // UI name
                       OBJ_FabricDFG::myConstructor,        // How to build the SOP
                       OBJ_FabricDFG::buildTemplatePair(0), // My parameters
