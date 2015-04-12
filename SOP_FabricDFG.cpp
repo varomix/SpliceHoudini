@@ -28,6 +28,51 @@ OP_Node* SOP_FabricDFG::myConstructor(OP_Network* net, const char* name, OP_Oper
 SOP_FabricDFG::SOP_FabricDFG(OP_Network* net, const char* name, OP_Operator* op)
     : FabricDFGOP<SOP_Node>(net, name, op)
 {
+    try
+    {
+        FabricServices::DFGWrapper::GraphExecutable graph = getView().getGraph();
+        if (graph.isValid())
+        {
+            FabricCore::Client* client = getView().getClient();
+            if (!client || !client->isValid())
+                FabricCore::Exception::Throw("client is invalid");
+
+            float* vec3Elements[3];
+            FabricCore::RTVal extArrayValue;
+            try
+            {
+                extArrayValue = FabricCore::RTVal::ConstructExternalArray(*client, "Vec3", 1, vec3Elements);
+            }
+            catch (FabricCore::Exception e)
+            {
+                FabricCore::Exception::Throw("extArrayValue not contructed");
+            }
+
+            try
+            {
+                FabricServices::DFGWrapper::Port port = graph.addPort("P", FabricCore::DFGPortType_IO, "Vec3<>");
+                port.setRTVal(extArrayValue);
+            }
+            catch (FabricCore::Exception e)
+            {
+                FabricCore::Exception::Throw("error while adding or setting port");
+            }
+
+            try
+            {
+                FabricServices::DFGWrapper::Port port = getView().getGraph().getPort("P");
+                FabricCore::RTVal shouldBeMyExtArrayValueButIsNull = port.getRTVal();
+            }
+            catch (FabricCore::Exception e)
+            {
+                FabricCore::Exception::Throw("error while getting RTVal from port");
+            }
+        }
+    }
+    catch (FabricCore::Exception e)
+    {
+        printf("FabricCore::Exception: %s\n", e.getDesc_cstr());
+    }
 }
 
 SOP_FabricDFG::~SOP_FabricDFG()
