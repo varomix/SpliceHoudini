@@ -56,7 +56,8 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
         FabricDFGView::OutputPorts outPortsPolyMesh = getView().getPolygonMeshPorts();
         if (outPortsPolyMesh.size() > 0)
         {
-            FabricCore::RTVal rtMesh = outPortsPolyMesh[0].getRTVal();
+
+            FabricCore::RTVal rtMesh = getView().getBinding()->getArgValue(outPortsPolyMesh[0]->getName());
 
             size_t nbPoints = 0;
             size_t nbPolygons = 0;
