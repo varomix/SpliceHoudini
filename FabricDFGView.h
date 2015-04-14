@@ -115,9 +115,7 @@ public:
     {
     }
 
-    virtual void onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPtr port, const char* resolvedType)
-    {
-    }
+    virtual void onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPtr port, const char* resolvedType);
 
     virtual void onPinResolvedTypeChanged(FabricServices::DFGWrapper::PinPtr pin, const char* resolvedType)
     {

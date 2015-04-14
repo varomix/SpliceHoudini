@@ -166,32 +166,37 @@ void FabricDFGView::setLogFunc(void (*in_logFunc)(void*, const char*, unsigned i
 
 void FabricDFGView::onPortInserted(FabricServices::DFGWrapper::PortPtr port)
 {
-    std::string resolvedType = port->getResolvedType();
+
+}
+
+void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPtr port, const char* resolvedType)
+{
+    std::string portResolvedType(resolvedType);
 
     switch (port->getPortType())
     {
     case FabricCore::DFGPortType_In:
-        if (resolvedType == "SInt32" || resolvedType == "Integer")
+        if (portResolvedType == "SInt32" || portResolvedType == "Integer")
         {
             m_inSInt32Names.push_back(port->getName());
             MultiParams::addIntParameterInst(m_op, port->getName(), 1);
         }
-        else if (resolvedType == "Float32" || resolvedType == "Scalar")
+        else if (portResolvedType == "Float32" || portResolvedType == "Scalar")
         {
             m_inFloat32Names.push_back(port->getName());
             MultiParams::addFloatParameterInst(m_op, port->getName(), 1.0);
         }
-        else if (resolvedType == "String")
+        else if (portResolvedType == "String")
         {
             m_inStringNames.push_back(port->getName());
             MultiParams::addStringParameterInst(m_op, port->getName());
         }
-        else if (resolvedType == "FilePath")
+        else if (portResolvedType == "FilePath")
         {
             m_inFilePathNames.push_back(port->getName());
             MultiParams::addStringParameterInst(m_op, port->getName(), "FilePath");
         }
-        else if (resolvedType == "Vec3")
+        else if (portResolvedType == "Vec3")
         {
             m_inVec3Names.push_back(port->getName());
             MultiParams::addVec3ParameterInst(m_op, port->getName(), Imath::Vec3<float>(0));
@@ -206,19 +211,22 @@ void FabricDFGView::onPortInserted(FabricServices::DFGWrapper::PortPtr port)
     case FabricCore::DFGPortType_IO:
         break;
     case FabricCore::DFGPortType_Out:
-        if (resolvedType == "PolygonMesh")
+        if (portResolvedType == "PolygonMesh")
+        {            
             m_outPolyMeshPorts.push_back(port);
+            int val = m_op->evalInt("__portsChanged", 0, 0);
+            m_op->setInt("__portsChanged", 0, 0, (val + 1) % 2);
 
-        else if (resolvedType == "Mat44")
+            m_op->setString(UT_String(getJSON().c_str()), CH_STRING_LITERAL, "jsonData", 0, 0);
+        }
+
+        else if (portResolvedType == "Mat44")
             m_outMat44Names.push_back(port->getName());
 
         break;
     }
 
-    int val = m_op->evalInt("__portsChanged", 0, 0);
-    m_op->setInt("__portsChanged", 0, 0, (val + 1) % 2);
 
-    m_op->setString(UT_String(getJSON().c_str()), CH_STRING_LITERAL, "jsonData", 0, 0);
 }
 
 void FabricDFGView::onPortRenamed(FabricServices::DFGWrapper::PortPtr port, const char* oldName)

@@ -93,133 +93,65 @@ OP_TemplatePair* OBJ_FabricDFG::buildTemplatePair(OP_TemplatePair* prevstuff)
 
 int OBJ_FabricDFG::applyInputIndependentTransform(OP_Context& context, UT_DMatrix4& mat)
 {
-    // try
-    // {
-    //     // call OBJ_Geometry::applyInputIndependentTransform() so that we don't
-    //     // lose any information
-    //     int modified = OBJ_Geometry::applyInputIndependentTransform(context, mat);
+    try
+    {
+        // call OBJ_Geometry::applyInputIndependentTransform() so that we don't
+        // lose any information
+        int modified = OBJ_Geometry::applyInputIndependentTransform(context, mat);
 
-    //     loadGraph();
-    //     fpreal now = context.getTime();
-    //     setMultiParameterInputPorts(now);
-    //     executeGraph();
+        loadGraph();
+        fpreal now = context.getTime();
+        setMultiParameterInputPorts(now);
+        executeGraph();
 
-    //     FabricServices::DFGWrapper::PortPtr port = getView().getGraph()->getPort("t");
-    //     if (port->isValid() && port->getDataType() == "Vec3")
-    //     {
-    //         float t[3];
-    //         std::vector<FabricCore::RTVal> args(2);
-    //         args[0] = FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &t);
-    //         args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
+        FabricServices::DFGWrapper::PortPtr port = getView().getGraph()->getPort("t");
+        if (port->isValid() && std::string(port->getResolvedType()) == "Vec3")
+        {
+            float t[3];
+            std::vector<FabricCore::RTVal> args(2);
+            args[0] = FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &t);
+            args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
 
-    //         port->getRTVal().callMethod("", "get", 2, &args[0]);
-    //         mat.pretranslate(t[0], t[1], t[2]);
-    //     }
+            FabricCore::RTVal rtVal = getView().getBinding()->getArgValue("t");
+            rtVal.callMethod("", "get", 2, &args[0]);
+            mat.pretranslate(t[0], t[1], t[2]);
+        }
 
-    //     port = getView().getExecutable().getPort("r");
-    //     if (port->isValid() && port->getDataType() == "Vec3")
-    //     {
-    //         float r[3];
-    //         std::vector<FabricCore::RTVal> args(2);
-    //         args[0] = FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &r);
-    //         args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
+        port = getView().getGraph()->getPort("r");
+        if (port->isValid() && std::string(port->getResolvedType()) == "Vec3")
+        {
+            float r[3];
+            std::vector<FabricCore::RTVal> args(2);
+            args[0] = FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &r);
+            args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
 
-    //         port->getRTVal().callMethod("", "get", 2, &args[0]);
-    //         mat.prerotate(r[0], r[1], r[2], UT_XformOrder());
-    //     }
+            FabricCore::RTVal rtVal = getView().getBinding()->getArgValue("r");
+            rtVal.callMethod("", "get", 2, &args[0]);
+            mat.prerotate(r[0], r[1], r[2], UT_XformOrder());
+        }
 
-    //     port = getView().getExecutable().getPort("s");
-    //     if (port->isValid() && port->getDataType() == "Vec3")
-    //     {
-    //         float s[3];
-    //         std::vector<FabricCore::RTVal> args(2);
-    //         args[0] = FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &s);
-    //         args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
+        port = getView().getGraph()->getPort("s");
+        if (port->isValid() && std::string(port->getResolvedType()) == "Vec3")
+        {
+            float s[3];
+            std::vector<FabricCore::RTVal> args(2);
+            args[0] = FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &s);
+            args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
 
-    //         port->getRTVal().callMethod("", "get", 2, &args[0]);
-    //         mat.prescale(s[0], s[1], s[2]);
-    //     }
+            FabricCore::RTVal rtVal = getView().getBinding()->getArgValue("s");
+            rtVal.callMethod("", "get", 2, &args[0]);
+            mat.prescale(s[0], s[1], s[2]);
+        }
 
-    //     flags().setTimeDep(true);
+        flags().setTimeDep(true);
 
-    //     // return 1 to indicate that we have modified the input matrix.
-    //     // if we didn't modify mat, then we should return 0 instead.
-    //     return 1;
-    // }
-    // catch (FabricCore::Exception e)
-    // {
-    //     printf("FabricCore::Exception from OBJ_FabricDFG::applyInputIndependentTransform:\n %s\n", e.getDesc_cstr());
-    //     return 0;
-    // }
+        // return 1 to indicate that we have modified the input matrix.
+        // if we didn't modify mat, then we should return 0 instead.
+        return 1;
+    }
+    catch (FabricCore::Exception e)
+    {
+        printf("FabricCore::Exception from OBJ_FabricDFG::applyInputIndependentTransform:\n %s\n", e.getDesc_cstr());
+        return 0;
+    }
 }
-
-// OP_ERROR OBJ_FabricDFG::cookMyObj(OP_Context& context)
-// {
-//     // OP_ERROR errorstatus;
-//     // OBJ_Geometry::cookMyObj computes the local and global transform, and
-//     // dirties the inverse of the global transform matrix. These are stored
-//     // in myXform, myWorldXform, and myIWorldXform, respectively.
-//     // errorstatus = OBJ_Geometry::cookMyObj(context);
-
-//     myXform.identity();
-//     myXform.scale(1.0, 1.0, 1.0);
-//     myXform.rotate(0.0, 3.14/4.0, 0.0, UT_XformOrder());
-//     myXform.translate(0.0, 0.0, 0.0);
-//     myWorldXform = myXform;
-
-//     // inverseDirty();
-
-//     // loadGraph();
-
-//     // fpreal now = context.getTime();
-
-//     // setMultiParameterInputPorts(now);
-//     // getView().getBinding()->execute();
-
-//     // const FabricDFGView::OutputPortsNames& outPortsMat44Names = getView().getOutputPortsMat44Names();
-//     // if (outPortsMat44Names.size() > 0)
-//     // {
-//     //     FabricCore::RTVal rtMat44 = getView().getMat44RTVal(outPortsMat44Names[0].c_str());
-//     //     if (rtMat44.isValid())
-//     //     {
-//     //         std::vector<float> comp(16);
-//     //         std::vector<FabricCore::RTVal> args(2);
-//     //         args[0] =
-//     //             FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", comp.size(),
-//     &comp[0]);
-//     //         args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0);
-
-//     //         try
-//     //         {
-//     //             rtMat44.callMethod("", "get", 2, &args[0]);
-
-//     //             UT_DMatrix4 dfgXfo(comp[0],
-//     //                                comp[1],
-//     //                                comp[2],
-//     //                                comp[3],
-//     //                                comp[4],
-//     //                                comp[5],
-//     //                                comp[6],
-//     //                                comp[7],
-//     //                                comp[8],
-//     //                                comp[9],
-//     //                                comp[10],
-//     //                                comp[11],
-//     //                                comp[12],
-//     //                                comp[13],
-//     //                                comp[14],
-//     //                                comp[15]);
-
-//     //             myXform = dfgXfo;
-//     //             myWorldXform = dfgXfo;
-//     //         }
-//     //         catch (FabricCore::Exception e)
-//     //         {
-//     //             printf("Error: %s\n", e.getDesc_cstr());
-//     //             return error();
-//     //         }
-//     //     }
-//     // }
-
-//     return error();
-// }
