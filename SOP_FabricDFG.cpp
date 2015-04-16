@@ -46,14 +46,14 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
 
     try
     {
-        loadGraph();
         fpreal now = context.getTime();
-        setMultiParameterInputPorts(now);
+        loadGraph(now);
         executeGraph();
 
         gdp->clearAndDestroy();
 
         FabricDFGView::OutputPorts outPortsPolyMesh = getView().getPolygonMeshPorts();
+        std::cout << "outPortsPolyMesh.size() " << outPortsPolyMesh.size() << std::endl;
         if (outPortsPolyMesh.size() > 0)
         {
 

@@ -15,13 +15,12 @@ namespace OpenSpliceHoudini
 template <typename OP>
 FabricDFGOP<OP>::FabricDFGOP(OP_Network* net, const char* name, OP_Operator* op)
     : OP(net, name, op)
-    // , m_multiparms(this)
     , m_graphLoaded(false)
     , m_view(this)
     , m_ui(this, m_view)
 {
     OP::getParm("__portsChanged").getTemplatePtr()->setInvisible(true);
-    OP::getParm("jsonData").getTemplatePtr()->setInvisible(true);
+    // OP::getParm("jsonData").getTemplatePtr()->setInvisible(true);
     OP::getParm("currentFrame").setExpression(0, "$F", CH_OLD_EXPR_LANGUAGE, 0);
     OP::getParm("currentFrame").setLockedFlag(0, 1);
     OP::getParm("currentFrame").getTemplatePtr()->setInvisible(true);
@@ -38,7 +37,7 @@ template <typename OP>
 PRM_Default FabricDFGOP<OP>::jsonFilePathDefault(0, "$FABRIC_DIR/Samples/DFG");
 
 template <typename OP>
-PRM_Template FabricDFGOP<OP>::jsonFilePathTemplate(PRM_FILE, 1, &jsonFilePath, &jsonFilePathDefault);
+PRM_Template FabricDFGOP<OP>::jsonFilePathTemplate(PRM_FILE_E, 1, &jsonFilePath, &jsonFilePathDefault);
 
 template <typename OP>
 PRM_Name FabricDFGOP<OP>::jsonData("jsonData", "JSON Data");
@@ -47,7 +46,7 @@ template <typename OP>
 PRM_Default FabricDFGOP<OP>::jsonDataDefault(0, "");
 
 template <typename OP>
-PRM_Template FabricDFGOP<OP>::jsonDataTemplate(PRM_STRING, 1, &jsonData, &jsonDataDefault);
+PRM_Template FabricDFGOP<OP>::jsonDataTemplate(PRM_STRING | PRM_TYPE_NOCOOK, 1, &jsonData, &jsonDataDefault);
 
 template <typename OP>
 PRM_Name FabricDFGOP<OP>::portsChanged("__portsChanged");
@@ -87,7 +86,7 @@ int FabricDFGOP<OP>::createGraphCallback(void* data, int index, float time, cons
 
         UT_String jsonData = op->getStringValue("jsonData");
 
-        op->m_view.setFromJSON(jsonData.buffer());
+        op->m_view.createBindingFromJSON(jsonData.buffer());
 
         const FabricDFGView::ParameterPortsNames& intInputs = op->m_view.getInputPortsSInt32Names();
         for (FabricDFGView::ParameterPortsNames::const_iterator it = intInputs.begin(); it != intInputs.end(); it++)
@@ -135,14 +134,14 @@ int FabricDFGOP<OP>::openGraphButtonCallback(void* data, int index, float time, 
 
 template <typename OP>
 PRM_Template FabricDFGOP<OP>::myTemplateList[] = {
-    groupTemplate,                          jsonFilePathTemplate,
-    jsonDataTemplate,                       portsChangedTemplate,
-    createGraphTemplate,                    openGraphButtonTemplate,
+    groupTemplate,                           jsonFilePathTemplate,
+    jsonDataTemplate,                        portsChangedTemplate,
+    createGraphTemplate,                     openGraphButtonTemplate,
     currentFrameTemplate,
 
-    MultiParams::Float32PortsMultiTemplate, MultiParams::SInt32PortsMultiTemplate,
-    MultiParams::StringPortsMultiTemplate,  MultiParams::FilePathPortsMultiTemplate,
-    MultiParams::Vec3PortsMultiTemplate,
+    MultiParams::Float32PortsMultiTemplate,  MultiParams::SInt32PortsMultiTemplate,
+    MultiParams::UInt32PortsMultiTemplate,   MultiParams::StringPortsMultiTemplate,
+    MultiParams::FilePathPortsMultiTemplate, MultiParams::Vec3PortsMultiTemplate,
 
     PRM_Template()
 };
@@ -162,7 +161,7 @@ void FabricDFGOP<OP>::setStringValue(const UT_String& value, const char* name, f
 }
 
 template <typename OP>
-void FabricDFGOP<OP>::loadGraph()
+void FabricDFGOP<OP>::loadGraph(const fpreal t)
 {
     if (!m_graphLoaded)
     {
@@ -174,13 +173,17 @@ void FabricDFGOP<OP>::loadGraph()
         UT_String jsonData = getStringValue("jsonData");
         try
         {
-            getView().setFromJSON(jsonData.buffer());
+            getView().createBindingFromJSON(jsonData.buffer());
         }
         catch (FabricCore::Exception e)
         {
             FabricCore::Exception::Throw((std::string("[FabricDFGOP<OP>::loadGraph]: ") + e.getDesc_cstr()).c_str());
         }
 
+        this->setMultiParameterInputPorts(t);
+        this->m_view.setMyGraph();
+        this->m_view.storeParameterPortsNames();
+        this->m_view.storeOutputPolymeshPorts();
     }
 }
 
@@ -213,6 +216,16 @@ void FabricDFGOP<OP>::setMultiParameterInputPorts(const fpreal t)
 
     num_param_instances = this->evalFloat("SInt32Ports", 0, t);
     instance_idx = this->getParm("SInt32Ports").getMultiStartOffset();
+    for (size_t i = 0; i < num_param_instances; ++i)
+    {
+        getView().setSInt32PortValue(MultiParams::getParameterInstIntName(this, instance_idx),
+                                     MultiParams::getParameterInstIntValue(this, instance_idx, t));
+
+        instance_idx++;
+    }
+
+    num_param_instances = this->evalFloat("UInt32Ports", 0, t);
+    instance_idx = this->getParm("UInt32Ports").getMultiStartOffset();
     for (size_t i = 0; i < num_param_instances; ++i)
     {
         getView().setSInt32PortValue(MultiParams::getParameterInstIntName(this, instance_idx),

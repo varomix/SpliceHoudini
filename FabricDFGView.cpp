@@ -44,7 +44,6 @@ FabricDFGView::FabricDFGView(OP_Node* op)
 
             // create KL AST manager
             s_manager = new ASTWrapper::KLASTManager(&s_client);
-
         }
         catch (FabricCore::Exception e)
         {
@@ -53,14 +52,14 @@ FabricDFGView::FabricDFGView(OP_Node* op)
     }
 
     s_instances.insert(std::pair<unsigned int, FabricDFGView*>(m_id, this));
-    
+
     // create an empty binding
     m_binding = s_host->createBindingToNewGraph();
 
-    // set the graph on the view
-    setGraph(DFGWrapper::GraphExecutablePtr::StaticCast(m_binding.getExecutable()));
+    setMyGraph();
 
     m_parameterPortsMap["SInt32"] = &m_inSInt32Names;
+    m_parameterPortsMap["UInt32"] = &m_inUInt32Names;
     m_parameterPortsMap["Float32"] = &m_inFloat32Names;
     m_parameterPortsMap["String"] = &m_inStringNames;
     m_parameterPortsMap["FilePath"] = &m_inFilePathNames;
@@ -135,27 +134,30 @@ std::string FabricDFGView::getJSON()
 {
     try
     {
-        return m_binding.getExecutable()->exportJSON();
+        return m_binding.exportJSON();
     }
     catch (FabricCore::Exception e)
     {
-        FabricCore::Exception::Throw((std::string("[FabricDFGView::setFromJSON: ") + e.getDesc_cstr()).c_str());
+        FabricCore::Exception::Throw(
+            (std::string("[FabricDFGView::createBindingFromJSON: ") + e.getDesc_cstr()).c_str());
     }
     return "";
 }
 
-void FabricDFGView::setFromJSON(const std::string& json)
+void FabricDFGView::createBindingFromJSON(const std::string& json)
 {
     try
     {
         m_binding = s_host->createBindingFromJSON(json.c_str());
-        setGraph(DFGWrapper::GraphExecutablePtr::StaticCast(m_binding.getExecutable()));
-        storeParameterPortsNames();
-        storeOutputPolymeshPorts();
+
+        // setGraph(DFGWrapper::GraphExecutablePtr::StaticCast(m_binding.getExecutable()));
+        // storeParameterPortsNames();
+        // storeOutputPolymeshPorts();
     }
     catch (FabricCore::Exception e)
     {
-        FabricCore::Exception::Throw((std::string("[FabricDFGView::setFromJSON: ") + e.getDesc_cstr()).c_str());
+        FabricCore::Exception::Throw(
+            (std::string("[FabricDFGView::createBindingFromJSON: ") + e.getDesc_cstr()).c_str());
     }
 }
 
@@ -166,12 +168,12 @@ void FabricDFGView::setLogFunc(void (*in_logFunc)(void*, const char*, unsigned i
 
 void FabricDFGView::onPortInserted(FabricServices::DFGWrapper::PortPtr port)
 {
-
 }
 
 void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPtr port, const char* resolvedType)
 {
     std::string portResolvedType(resolvedType);
+    bool outPutPortChanged = false;
 
     switch (port->getPortType())
     {
@@ -181,6 +183,13 @@ void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPt
             m_inSInt32Names.push_back(port->getName());
             MultiParams::addIntParameterInst(m_op, port->getName(), 1);
         }
+        else if (portResolvedType == "UInt32" || portResolvedType == "Index" || portResolvedType == "Size" ||
+                 portResolvedType == "Count")
+        {
+            m_inUInt32Names.push_back(port->getName());
+            MultiParams::addIntParameterInst(m_op, port->getName(), 1, "UInt32");
+        }
+
         else if (portResolvedType == "Float32" || portResolvedType == "Scalar")
         {
             m_inFloat32Names.push_back(port->getName());
@@ -203,7 +212,9 @@ void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPt
         }
         else
         {
-            std::cout <<  port->getName() << " is a Canvas only input ! (Not reflected by Houdini)" <<  std::endl;
+            std::cout << "FabricDFGView::onPortResolvedTypeChanged: " << port->getName()
+                      << " is a Canvas only input ! Type " << portResolvedType << " not reflected by Houdini"
+                      << std::endl;
         }
 
         break;
@@ -212,21 +223,17 @@ void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPt
         break;
     case FabricCore::DFGPortType_Out:
         if (portResolvedType == "PolygonMesh")
-        {            
+        {
             m_outPolyMeshPorts.push_back(port);
-            int val = m_op->evalInt("__portsChanged", 0, 0);
-            m_op->setInt("__portsChanged", 0, 0, (val + 1) % 2);
-
-            m_op->setString(UT_String(getJSON().c_str()), CH_STRING_LITERAL, "jsonData", 0, 0);
+            outPutPortChanged = true;
         }
-
-        else if (portResolvedType == "Mat44")
-            m_outMat44Names.push_back(port->getName());
-
         break;
     }
 
-
+    if (outPutPortChanged)
+    {
+        cookMyOp(true);
+    }
 }
 
 void FabricDFGView::onPortRenamed(FabricServices::DFGWrapper::PortPtr port, const char* oldName)
@@ -244,8 +251,7 @@ void FabricDFGView::onPortRenamed(FabricServices::DFGWrapper::PortPtr port, cons
 
     // Update multi-parameters instance name
     MultiParams::renameInstance(m_op, resolvedType, oldName, port->getName());
-
-    m_op->setString(UT_String(getJSON().c_str()), CH_STRING_LITERAL, "jsonData", 0, 0);
+    saveJsonData();
 }
 
 void FabricDFGView::onPortRemoved(FabricServices::DFGWrapper::PortPtr port)
@@ -261,6 +267,12 @@ void FabricDFGView::onPortRemoved(FabricServices::DFGWrapper::PortPtr port)
         removed = MultiParams::removeIntParameterInst(m_op, port->getName());
         if (removed)
             m_inSInt32Names.erase(std::find(m_inSInt32Names.begin(), m_inSInt32Names.end(), port->getName()));
+    }
+    else if (!removed)
+    {
+        removed = MultiParams::removeIntParameterInst(m_op, port->getName(), "UInt32");
+        if (removed)
+            m_inUInt32Names.erase(std::find(m_inUInt32Names.begin(), m_inUInt32Names.end(), port->getName()));
     }
     else if (!removed)
     {
@@ -282,7 +294,14 @@ void FabricDFGView::onPortRemoved(FabricServices::DFGWrapper::PortPtr port)
     }
 
     if (removed)
-        m_op->setString(UT_String(getJSON().c_str()), CH_STRING_LITERAL, "jsonData", 0, 0);
+        saveJsonData();
+}
+
+void FabricDFGView::onEndPointsConnected(FabricServices::DFGWrapper::EndPointPtr src,
+                                         FabricServices::DFGWrapper::EndPointPtr dst)
+{
+    storeOutputPolymeshPorts();
+    cookMyOp(true);
 }
 
 // To move
@@ -298,6 +317,8 @@ void FabricDFGView::storeParameterPortsNames()
         {
             if (resolvedType == "SInt32")
                 m_inSInt32Names.push_back(port->getName());
+            else if (resolvedType == "UInt32")
+                m_inUInt32Names.push_back(port->getName());
             else if (resolvedType == "Float32")
                 m_inFloat32Names.push_back(port->getName());
             else if (resolvedType == "String")
@@ -308,7 +329,11 @@ void FabricDFGView::storeParameterPortsNames()
                 m_inVec3Names.push_back(port->getName());
 
             else
-                std::cout <<  port->getName() << " is a Canvas only input ! (Not reflected by Houdini)" <<  std::endl;
+            {
+                std::cout << "FabricDFGView::onPortResolvedTypeChanged: " << port->getName()
+                          << " is a Canvas only input ! Type " << resolvedType << " not reflected by Houdini"
+                          << std::endl;
+            }
         }
 
         // case FabricCore::DFGPortType_IO:
@@ -338,12 +363,35 @@ void FabricDFGView::storeOutputPolymeshPorts()
     }
 }
 
+void FabricDFGView::cookMyOp(bool saveGraph)
+{
+    int val = m_op->evalInt("__portsChanged", 0, 0);
+    m_op->setInt("__portsChanged", 0, 0, (val + 1) % 2);
+    if (saveGraph)
+        saveJsonData();
+}
+
+void FabricDFGView::saveJsonData()
+{
+    m_op->setString(UT_String(getJSON().c_str()), CH_STRING_LITERAL, "jsonData", 0, 0);
+}
+
 void FabricDFGView::setSInt32PortValue(const char* name, int val)
 {
     DFGWrapper::PortPtr port = m_binding.getExecutable()->getPort(name);
     if (port->isValid())
     {
         FabricCore::RTVal rtVal = FabricCore::RTVal::ConstructSInt32(s_client, val);
+        m_binding.setArgValue(name, rtVal);
+    }
+}
+
+void FabricDFGView::setUInt32PortValue(const char* name, int val)
+{
+    DFGWrapper::PortPtr port = m_binding.getExecutable()->getPort(name);
+    if (port->isValid())
+    {
+        FabricCore::RTVal rtVal = FabricCore::RTVal::ConstructUInt32(s_client, val);
         m_binding.setArgValue(name, rtVal);
     }
 }

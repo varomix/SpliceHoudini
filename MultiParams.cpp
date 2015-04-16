@@ -12,26 +12,26 @@
     PRM_Name MultiParams::TOKEN##PortzVal(#TOKEN "PortzVal#", "");                                                     \
     PRM_Default MultiParams::TOKEN##PortValDefault(floatDefault, stringDefault)
 
-#define ADD_PARM1_TEMPLATE(TOKEN, PRM_Type)                                                                            \
+#define ADD_PARM1_TEMPLATE(TOKEN, PRM_Type, RANGE)                                                                     \
     PRM_Template MultiParams::TOKEN##PortsTemplate[] = {                                                               \
         PRM_Template(PRM_ALPHASTRING | PRM_TYPE_LABEL | PRM_TYPE_JOIN_NEXT | PRM_TYPE_NOCOOK,                          \
                      1,                                                                                                \
                      &TOKEN##Port,                                                                                     \
                      &portDefaultName),                                                                                \
-        PRM_Template(PRM_Type, 1, &TOKEN##PortVal, &TOKEN##PortValDefault),                                            \
+        PRM_Template(PRM_Type, 1, &TOKEN##PortVal, &TOKEN##PortValDefault, 0, RANGE),                                  \
         PRM_Template()                                                                                                 \
     }
 
 // Can't use XYZ with vector size of 3 (crash when used with a string as first template)
 // So we create our own Vec3 param from three float params.
-#define ADD_PARM3_TEMPLATE(TOKEN, PRM_Type)                                                                            \
+#define ADD_PARM3_TEMPLATE(TOKEN, PRM_Type, RANGE)                                                                     \
     PRM_Template MultiParams::TOKEN##PortsTemplate[] = {                                                               \
         PRM_Template(PRM_ALPHASTRING | PRM_TYPE_LABEL | PRM_TYPE_JOIN_NEXT | PRM_TYPE_NOCOOK,                          \
                      1,                                                                                                \
                      &TOKEN##Port,                                                                                     \
                      &portDefaultName),                                                                                \
-        PRM_Template(PRM_Type | PRM_TYPE_JOIN_NEXT, 1, &TOKEN##PortxVal, &TOKEN##PortValDefault),                      \
-        PRM_Template(PRM_Type | PRM_TYPE_JOIN_NEXT, 1, &TOKEN##PortyVal, &TOKEN##PortValDefault),                      \
+        PRM_Template(PRM_Type | PRM_TYPE_JOIN_NEXT, 1, &TOKEN##PortxVal, &TOKEN##PortValDefault, 0, RANGE),            \
+        PRM_Template(PRM_Type | PRM_TYPE_JOIN_NEXT, 1, &TOKEN##PortyVal, &TOKEN##PortValDefault, 0, RANGE),            \
         PRM_Template(PRM_Type, 1, &TOKEN##PortzVal, &TOKEN##PortValDefault),                                           \
         PRM_Template()                                                                                                 \
     }
@@ -45,14 +45,14 @@
                                                         0,                                                             \
                                                         &PRM_SpareData::multiStartOffsetZero)
 
-#define BUILD_1_PARAMETER(TOKEN, PRM_Type, floatDefault, stringDefault)                                                \
+#define BUILD_1_PARAMETER(TOKEN, PRM_Type, RANGE, floatDefault, stringDefault)                                         \
     INIT_MULTI_PARAMETER_TYPE(TOKEN, PRM_Type, floatDefault, stringDefault);                                           \
-    ADD_PARM1_TEMPLATE(TOKEN, PRM_Type);                                                                               \
+    ADD_PARM1_TEMPLATE(TOKEN, PRM_Type, RANGE);                                                                        \
     ADD_MULTIPARM_TEMPLATE(TOKEN)
 
-#define BUILD_3_PARAMETERS(TOKEN, PRM_Type, floatDefault, stringDefault)                                               \
+#define BUILD_3_PARAMETERS(TOKEN, PRM_Type, RANGE, floatDefault, stringDefault)                                        \
     INIT_MULTI_PARAMETER_TYPE(TOKEN, PRM_Type, floatDefault, stringDefault);                                           \
-    ADD_PARM3_TEMPLATE(TOKEN, PRM_Type);                                                                               \
+    ADD_PARM3_TEMPLATE(TOKEN, PRM_Type, RANGE);                                                                        \
     ADD_MULTIPARM_TEMPLATE(TOKEN)
 
 // PRM_MULTITYPE_LIST
@@ -69,12 +69,14 @@ MultiParams::~MultiParams()
 }
 
 PRM_Default MultiParams::portDefaultName(0, "name1");
+PRM_Range MultiParams::indexRange(PRM_RANGE_RESTRICTED, 0, PRM_RANGE_UI, 100);
 
-BUILD_1_PARAMETER(Float32, PRM_FLT, 0.0, "");
-BUILD_1_PARAMETER(SInt32, PRM_INT, 0.0, "");
-BUILD_1_PARAMETER(String, PRM_STRING, 0.0, "");
-BUILD_1_PARAMETER(FilePath, PRM_FILE, 0.0, "");
-BUILD_3_PARAMETERS(Vec3, PRM_FLT, 0.0, "");
+BUILD_1_PARAMETER(Float32, PRM_FLT, 0, 0.0, "");
+BUILD_1_PARAMETER(SInt32, PRM_INT, 0, 0.0, "");
+BUILD_1_PARAMETER(UInt32, PRM_INT, &indexRange, 0.0, "");
+BUILD_1_PARAMETER(String, PRM_STRING, 0, 0.0, "");
+BUILD_1_PARAMETER(FilePath, PRM_FILE, 0, 0.0, "");
+BUILD_3_PARAMETERS(Vec3, PRM_FLT, 0, 0.0, "");
 
 // Does not work (crash).
 void MultiParams::clear(OP_Parameters* op)
@@ -180,17 +182,18 @@ float MultiParams::getParameterInstFloatValue(OP_Parameters* op, int instance_id
     return op->evalFloatInst("Float32PortVal#", &instance_idx, 0, t);
 }
 
-void MultiParams::addIntParameterInst(OP_Parameters* op, const std::string& name, int val)
+void MultiParams::addIntParameterInst(OP_Parameters* op, const std::string& name, int val, const std::string& option)
 {
-    std::string multiParmName("SInt32Ports");
+    std::string multiParmName = option + "Ports";
+
     int instance_idx = addInstance(op, multiParmName, name);
     std::string valueParm = multiParmName.substr(0, multiParmName.length() - 1) + "Val#";
     op->setIntInst(val, valueParm.c_str(), &instance_idx, 0, 0);
 }
 
-bool MultiParams::removeIntParameterInst(OP_Parameters* op, const std::string& name)
+bool MultiParams::removeIntParameterInst(OP_Parameters* op, const std::string& name, const std::string& option)
 {
-    return removeInstance(op, "SInt32", name);
+    return removeInstance(op, option, name);
 }
 
 const UT_String MultiParams::getParameterInstIntName(OP_Parameters* op, int instance_idx)
@@ -207,8 +210,8 @@ int MultiParams::getParameterInstIntValue(OP_Parameters* op, int instance_idx, f
 
 void MultiParams::addStringParameterInst(OP_Parameters* op,
                                          const std::string& name,
-                                         const std::string& option,
-                                         const char* val)
+                                         const char* val,
+                                         const std::string& option)
 {
     std::string multiParmName = option + "Ports";
     int instance_idx = addInstance(op, multiParmName, name);

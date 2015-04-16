@@ -99,8 +99,8 @@ int OBJ_FabricDFG::applyInputIndependentTransform(OP_Context& context, UT_DMatri
         // lose any information
         int modified = OBJ_Geometry::applyInputIndependentTransform(context, mat);
 
-        loadGraph();
         fpreal now = context.getTime();
+        loadGraph(now);
         setMultiParameterInputPorts(now);
         executeGraph();
 

@@ -35,6 +35,7 @@ public:
 
     DECLARE_MULTI_PARAMETER_TYPE(Float32);
     DECLARE_MULTI_PARAMETER_TYPE(SInt32);
+    DECLARE_MULTI_PARAMETER_TYPE(UInt32);
     DECLARE_MULTI_PARAMETER_TYPE(String);
     DECLARE_MULTI_PARAMETER_TYPE(FilePath);
     DECLARE_MULTI_PARAMETER_TYPE(Vec3);
@@ -46,24 +47,25 @@ public:
     static const UT_String getParameterInstFloatName(OP_Parameters* op, int instance_idx);
     static float getParameterInstFloatValue(OP_Parameters* op, int instance_idx, fpreal t = 0);
 
-    static void addIntParameterInst(OP_Parameters* op, const std::string& name, int val);
-    static bool removeIntParameterInst(OP_Parameters* op, const std::string& name);
+    static void
+    addIntParameterInst(OP_Parameters* op, const std::string& name, int val = 0, const std::string& option = "SInt32");
+    static bool
+    removeIntParameterInst(OP_Parameters* op, const std::string& name, const std::string& option = "SInt32");
     static const UT_String getParameterInstIntName(OP_Parameters* op, int instance_idx);
     static int getParameterInstIntValue(OP_Parameters* op, int instance_idx, fpreal t = 0);
 
     static void addStringParameterInst(OP_Parameters* op,
                                        const std::string& name,
-                                       const std::string& option = "string",
-                                       const char* val = "");
+                                       const char* val = "",
+                                       const std::string& option = "String");
     static bool
-    removeStringParameterInst(OP_Parameters* op, const std::string& name, const std::string& option = "string");
+    removeStringParameterInst(OP_Parameters* op, const std::string& name, const std::string& option = "String");
     static const UT_String
-    getParameterInstStringName(OP_Parameters* op, int instance_idx, const std::string& option = "string");
+    getParameterInstStringName(OP_Parameters* op, int instance_idx, const std::string& option = "String");
     static const UT_String getParameterInstStringValue(OP_Parameters* op,
                                                        int instance_idx,
                                                        fpreal t = 0,
-                                                       const std::string& option = "string");
-
+                                                       const std::string& option = "String");
 
     static void addVec3ParameterInst(OP_Parameters* op, const std::string& name, Imath::Vec3<float> val);
     static bool removeVec3ParameterInst(OP_Parameters* op, const std::string& name);
@@ -79,6 +81,7 @@ private:
     static int addInstance(OP_Parameters* op, const std::string& multiParmName, const std::string& name);
     static bool removeInstance(OP_Parameters* op, const std::string& multiParmTypeName, const std::string& name);
     static PRM_Default portDefaultName;
+    static PRM_Range indexRange;
 };
 
 } // End namespace OpenSpliceHoudini

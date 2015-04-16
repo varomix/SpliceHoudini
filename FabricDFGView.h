@@ -47,7 +47,7 @@ public:
 
     // persistence
     std::string getJSON();
-    void setFromJSON(const std::string& json);
+    void createBindingFromJSON(const std::string& json);
 
     // logging.
     static void setLogFunc(void (*in_logFunc)(void*, const char*, unsigned int));
@@ -77,9 +77,7 @@ public:
     virtual void onPortRemoved(FabricServices::DFGWrapper::PortPtr port);
 
     virtual void onEndPointsConnected(FabricServices::DFGWrapper::EndPointPtr src,
-                                      FabricServices::DFGWrapper::EndPointPtr dst)
-    {
-    }
+                                      FabricServices::DFGWrapper::EndPointPtr dst);
     virtual void onEndPointsDisconnected(FabricServices::DFGWrapper::EndPointPtr src,
                                          FabricServices::DFGWrapper::EndPointPtr dst)
     {
@@ -147,6 +145,12 @@ public:
         return m_inSInt32Names;
     }
 
+    void setUInt32PortValue(const char* name, int val);
+    const ParameterPortsNames& getInputPortsUInt32Names() const
+    {
+        return m_inUInt32Names;
+    }
+
     void setFloat32PortValue(const char* name, float val);
     const ParameterPortsNames& getInputPortsFloat32Names() const
     {
@@ -182,11 +186,22 @@ public:
         return m_outPolyMeshPorts;
     }
 
-private:
+public:
     void storeParameterPortsNames();
     void storeOutputPolymeshPorts();
+    
+    void setMyGraph()
+    {
+        setGraph(FabricServices::DFGWrapper::GraphExecutablePtr::StaticCast(m_binding.getExecutable()));
+    }
+
+
+private:
+    void cookMyOp(bool saveGraph);
+    void saveJsonData();
 
     ParameterPortsNames m_inSInt32Names;
+    ParameterPortsNames m_inUInt32Names;
     ParameterPortsNames m_inFloat32Names;
     ParameterPortsNames m_inStringNames;
     ParameterPortsNames m_inFilePathNames;
