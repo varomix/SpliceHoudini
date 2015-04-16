@@ -20,7 +20,7 @@ FabricDFGOP<OP>::FabricDFGOP(OP_Network* net, const char* name, OP_Operator* op)
     , m_ui(this, m_view)
 {
     OP::getParm("__portsChanged").getTemplatePtr()->setInvisible(true);
-    // OP::getParm("jsonData").getTemplatePtr()->setInvisible(true);
+    OP::getParm("jsonData").getTemplatePtr()->setInvisible(true);
     OP::getParm("currentFrame").setExpression(0, "$F", CH_OLD_EXPR_LANGUAGE, 0);
     OP::getParm("currentFrame").setLockedFlag(0, 1);
     OP::getParm("currentFrame").getTemplatePtr()->setInvisible(true);
@@ -81,44 +81,44 @@ int FabricDFGOP<OP>::createGraphCallback(void* data, int index, float time, cons
 
     if (buffer.str() != "")
     {
-        // MultiParams::clear(op); // Does not work
-        op->setStringValue(UT_String(buffer.str()), "jsonData");
+        // // MultiParams::clear(op); // Does not work
+        // op->setStringValue(UT_String(buffer.str()), "jsonData");
 
-        UT_String jsonData = op->getStringValue("jsonData");
+        // UT_String jsonData = op->getStringValue("jsonData");
 
-        op->m_view.createBindingFromJSON(jsonData.buffer());
+        // op->m_view.createBindingFromJSON(jsonData.buffer());
 
-        const FabricDFGView::ParameterPortsNames& intInputs = op->m_view.getInputPortsSInt32Names();
-        for (FabricDFGView::ParameterPortsNames::const_iterator it = intInputs.begin(); it != intInputs.end(); it++)
-        {
-            MultiParams::addIntParameterInst(op, *it, 1);
-        }
+        // const FabricDFGView::ParameterPortsNames& intInputs = op->m_view.getInputPortsSInt32Names();
+        // for (FabricDFGView::ParameterPortsNames::const_iterator it = intInputs.begin(); it != intInputs.end(); it++)
+        // {
+        //     MultiParams::addIntParameterInst(op, *it, 1);
+        // }
 
-        const FabricDFGView::ParameterPortsNames& floatInputs = op->m_view.getInputPortsFloat32Names();
-        for (FabricDFGView::ParameterPortsNames::const_iterator it = floatInputs.begin(); it != floatInputs.end(); it++)
-        {
-            MultiParams::addFloatParameterInst(op, *it, 1.0);
-        }
+        // const FabricDFGView::ParameterPortsNames& floatInputs = op->m_view.getInputPortsFloat32Names();
+        // for (FabricDFGView::ParameterPortsNames::const_iterator it = floatInputs.begin(); it != floatInputs.end(); it++)
+        // {
+        //     MultiParams::addFloatParameterInst(op, *it, 1.0);
+        // }
 
-        const FabricDFGView::ParameterPortsNames& stringInputs = op->m_view.getInputPortsStringNames();
-        for (FabricDFGView::ParameterPortsNames::const_iterator it = stringInputs.begin(); it != stringInputs.end();
-             it++)
-        {
-            MultiParams::addStringParameterInst(op, *it);
-        }
+        // const FabricDFGView::ParameterPortsNames& stringInputs = op->m_view.getInputPortsStringNames();
+        // for (FabricDFGView::ParameterPortsNames::const_iterator it = stringInputs.begin(); it != stringInputs.end();
+        //      it++)
+        // {
+        //     MultiParams::addStringParameterInst(op, *it);
+        // }
 
-        const FabricDFGView::ParameterPortsNames& filePathInputs = op->m_view.getInputPortsFilePathNames();
-        for (FabricDFGView::ParameterPortsNames::const_iterator it = filePathInputs.begin(); it != filePathInputs.end();
-             it++)
-        {
-            MultiParams::addStringParameterInst(op, *it, "FilePath");
-        }
+        // const FabricDFGView::ParameterPortsNames& filePathInputs = op->m_view.getInputPortsFilePathNames();
+        // for (FabricDFGView::ParameterPortsNames::const_iterator it = filePathInputs.begin(); it != filePathInputs.end();
+        //      it++)
+        // {
+        //     MultiParams::addStringParameterInst(op, *it, "FilePath");
+        // }
 
-        const FabricDFGView::ParameterPortsNames& vec3Inputs = op->m_view.getInputPortsVec3Names();
-        for (FabricDFGView::ParameterPortsNames::const_iterator it = vec3Inputs.begin(); it != vec3Inputs.end(); it++)
-        {
-            MultiParams::addVec3ParameterInst(op, *it, Imath::Vec3<float>(0));
-        }
+        // const FabricDFGView::ParameterPortsNames& vec3Inputs = op->m_view.getInputPortsVec3Names();
+        // for (FabricDFGView::ParameterPortsNames::const_iterator it = vec3Inputs.begin(); it != vec3Inputs.end(); it++)
+        // {
+        //     MultiParams::addVec3ParameterInst(op, *it, Imath::Vec3<float>(0));
+        // }
     }
 
     return 1;
@@ -182,7 +182,6 @@ void FabricDFGOP<OP>::loadGraph(const fpreal t)
 
         this->setMultiParameterInputPorts(t);
         this->m_view.setMyGraph();
-        this->m_view.storeParameterPortsNames();
         this->m_view.storeOutputPolymeshPorts();
     }
 }

@@ -12,7 +12,8 @@ SOURCES = \
 	OBJ_FabricDFG.cpp \
 	${WIDGET}.cpp \
 	moc_${WIDGET}.cpp \
-	CanvasUI.cpp
+	CanvasUI.cpp \
+	ParameterFactory.cpp
 
 FABRIC_PATH = ${FABRIC_DIR}
 INCDIRS = -I${FABRIC_PATH}/include/

@@ -140,46 +140,13 @@ private:
     // This part should be moved
 public:
     void setSInt32PortValue(const char* name, int val);
-    const ParameterPortsNames& getInputPortsSInt32Names() const
-    {
-        return m_inSInt32Names;
-    }
-
     void setUInt32PortValue(const char* name, int val);
-    const ParameterPortsNames& getInputPortsUInt32Names() const
-    {
-        return m_inUInt32Names;
-    }
-
     void setFloat32PortValue(const char* name, float val);
-    const ParameterPortsNames& getInputPortsFloat32Names() const
-    {
-        return m_inFloat32Names;
-    }
-
     void setStringPortValue(const char* name, const char* val);
-    const ParameterPortsNames& getInputPortsStringNames() const
-    {
-        return m_inStringNames;
-    }
-
     void setFilePathPortValue(const char* name, const char* val);
-    const ParameterPortsNames& getInputPortsFilePathNames() const
-    {
-        return m_inFilePathNames;
-    }
-
     void setVec3PortValue(const char* name, const Imath::Vec3<float>& val);
-    const ParameterPortsNames& getInputPortsVec3Names() const
-    {
-        return m_inVec3Names;
-    }
 
     FabricCore::RTVal getMat44RTVal(const char* name);
-    const OutputPortsNames& getOutputPortsMat44Names() const
-    {
-        return m_outMat44Names;
-    }
 
     OutputPorts getPolygonMeshPorts() const
     {
@@ -187,7 +154,6 @@ public:
     }
 
 public:
-    void storeParameterPortsNames();
     void storeOutputPolymeshPorts();
     
     void setMyGraph()
@@ -200,12 +166,6 @@ private:
     void cookMyOp(bool saveGraph);
     void saveJsonData();
 
-    ParameterPortsNames m_inSInt32Names;
-    ParameterPortsNames m_inUInt32Names;
-    ParameterPortsNames m_inFloat32Names;
-    ParameterPortsNames m_inStringNames;
-    ParameterPortsNames m_inFilePathNames;
-    ParameterPortsNames m_inVec3Names;
     std::map<std::string, ParameterPortsNames*> m_parameterPortsMap;
 
     OutputPortsNames m_outPolygonMeshNames;
@@ -215,6 +175,7 @@ private:
 
     FabricDFGWidgetPtr m_widget;
     OP_Node* m_op;
+
 };
 } // End namespace OpenSpliceHoudini
 

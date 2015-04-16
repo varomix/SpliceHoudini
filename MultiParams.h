@@ -36,6 +36,9 @@ public:
     DECLARE_MULTI_PARAMETER_TYPE(Float32);
     DECLARE_MULTI_PARAMETER_TYPE(SInt32);
     DECLARE_MULTI_PARAMETER_TYPE(UInt32);
+    DECLARE_MULTI_PARAMETER_TYPE(Index);
+    DECLARE_MULTI_PARAMETER_TYPE(Size);
+    DECLARE_MULTI_PARAMETER_TYPE(Count);
     DECLARE_MULTI_PARAMETER_TYPE(String);
     DECLARE_MULTI_PARAMETER_TYPE(FilePath);
     DECLARE_MULTI_PARAMETER_TYPE(Vec3);
@@ -43,12 +46,42 @@ public:
     static void clear(OP_Parameters* op);
 
     static void addFloatParameterInst(OP_Parameters* op, const std::string& name, float val);
+    static void addFloat32Parameter(OP_Parameters* op, const std::string& name)
+    {
+        addFloatParameterInst(op, name, 1.0);
+    }
+
     static bool removeFloatParameterInst(OP_Parameters* op, const std::string& name);
     static const UT_String getParameterInstFloatName(OP_Parameters* op, int instance_idx);
     static float getParameterInstFloatValue(OP_Parameters* op, int instance_idx, fpreal t = 0);
 
     static void
     addIntParameterInst(OP_Parameters* op, const std::string& name, int val = 0, const std::string& option = "SInt32");
+    static void addSInt32Parameter(OP_Parameters* op, const std::string& name)
+    {
+        addIntParameterInst(op, name);
+    }
+    static void addUInt32Parameter(OP_Parameters* op, const std::string& name)
+    {
+        addIntParameterInst(op, name, 0, "UInt32");
+    }
+    static void addIntegerParameter(OP_Parameters* op, const std::string& name)
+    {
+        addIntParameterInst(op, name, 0, "Integer");
+    }
+    static void addIndexParameter(OP_Parameters* op, const std::string& name)
+    {
+        addIntParameterInst(op, name, 0, "Index");
+    }
+    static void addSizeParameter(OP_Parameters* op, const std::string& name)
+    {
+        addIntParameterInst(op, name, 0, "Size");
+    }
+    static void addCountParameter(OP_Parameters* op, const std::string& name)
+    {
+        addIntParameterInst(op, name, 0, "Count");
+    }
+
     static bool
     removeIntParameterInst(OP_Parameters* op, const std::string& name, const std::string& option = "SInt32");
     static const UT_String getParameterInstIntName(OP_Parameters* op, int instance_idx);
@@ -58,6 +91,16 @@ public:
                                        const std::string& name,
                                        const char* val = "",
                                        const std::string& option = "String");
+
+    static void addStringParameter(OP_Parameters* op, const std::string& name)
+    {
+        addStringParameterInst(op, name);
+    }
+    static void addFilePathParameter(OP_Parameters* op, const std::string& name)
+    {
+        addStringParameterInst(op, name, "", "FilePath");
+    }
+
     static bool
     removeStringParameterInst(OP_Parameters* op, const std::string& name, const std::string& option = "String");
     static const UT_String
@@ -68,6 +111,12 @@ public:
                                                        const std::string& option = "String");
 
     static void addVec3ParameterInst(OP_Parameters* op, const std::string& name, Imath::Vec3<float> val);
+    static void addVec3Parameter(OP_Parameters* op, const std::string& name)
+    {
+        addVec3ParameterInst(op, name, Imath::Vec3<float>(0));
+    }
+    
+
     static bool removeVec3ParameterInst(OP_Parameters* op, const std::string& name);
     static const UT_String getParameterInstVec3Name(OP_Parameters* op, int instance_idx);
     static Imath::Vec3<float> getParameterInstVec3Value(OP_Parameters* op, int instance_idx, fpreal t = 0);
