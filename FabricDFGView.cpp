@@ -204,12 +204,11 @@ void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPt
 void FabricDFGView::onPortRenamed(FabricServices::DFGWrapper::PortPtr port, const char* oldName)
 {
     std::string resolvedType(port->getResolvedType());
-
-    // Need to check if resolvedType is supported !!!
-
-    // Update multi-parameters instance name
-    MultiParams::renameInstance(m_op, resolvedType, oldName, port->getName());
-    saveJsonData();
+    if (MultiParams::isSupportedType(resolvedType))
+    {
+        MultiParams::renameInstance(m_op, resolvedType, oldName, port->getName());
+        saveJsonData();
+    }
 }
 
 void FabricDFGView::onPortRemoved(FabricServices::DFGWrapper::PortPtr port)
@@ -273,7 +272,7 @@ void FabricDFGView::setSInt32PortValue(const char* name, int val)
 }
 
 void FabricDFGView::setUInt32PortValue(const char* name, int val)
-{ 
+{
     DFGWrapper::PortPtr port = m_binding.getExecutable()->getPort(name);
     if (port->isValid())
     {

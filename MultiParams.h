@@ -43,6 +43,15 @@ public:
     DECLARE_MULTI_PARAMETER_TYPE(FilePath);
     DECLARE_MULTI_PARAMETER_TYPE(Vec3);
 
+    static bool isSupportedType(const std::string& klTypeName)
+    {
+        if (klTypeName == "Float32" || klTypeName == "SInt32" || klTypeName == "UInt32" || klTypeName == "Index" ||
+            klTypeName == "Size" || klTypeName == "Count" || klTypeName == "Count" || klTypeName == "String" ||
+            klTypeName == "FilePath" || klTypeName == "Vec3")
+            return true;
+        return false;
+    }
+
     static void clear(OP_Parameters* op);
 
     static void addFloatParameterInst(OP_Parameters* op, const std::string& name, float val);
