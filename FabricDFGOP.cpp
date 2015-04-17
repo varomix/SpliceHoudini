@@ -4,9 +4,6 @@
 #include <PRM/PRM_Include.h>
 
 #include <SOP/SOP_Node.h>
-#include <OBJ/OBJ_Node.h>
-#include <ROP/ROP_Node.h>
-#include <VOP/VOP_Node.h>
 #include <OBJ/OBJ_Geometry.h>
 
 namespace OpenSpliceHoudini
@@ -95,7 +92,8 @@ int FabricDFGOP<OP>::createGraphCallback(void* data, int index, float time, cons
         // }
 
         // const FabricDFGView::ParameterPortsNames& floatInputs = op->m_view.getInputPortsFloat32Names();
-        // for (FabricDFGView::ParameterPortsNames::const_iterator it = floatInputs.begin(); it != floatInputs.end(); it++)
+        // for (FabricDFGView::ParameterPortsNames::const_iterator it = floatInputs.begin(); it != floatInputs.end();
+        // it++)
         // {
         //     MultiParams::addFloatParameterInst(op, *it, 1.0);
         // }
@@ -108,14 +106,16 @@ int FabricDFGOP<OP>::createGraphCallback(void* data, int index, float time, cons
         // }
 
         // const FabricDFGView::ParameterPortsNames& filePathInputs = op->m_view.getInputPortsFilePathNames();
-        // for (FabricDFGView::ParameterPortsNames::const_iterator it = filePathInputs.begin(); it != filePathInputs.end();
+        // for (FabricDFGView::ParameterPortsNames::const_iterator it = filePathInputs.begin(); it !=
+        // filePathInputs.end();
         //      it++)
         // {
         //     MultiParams::addStringParameterInst(op, *it, "FilePath");
         // }
 
         // const FabricDFGView::ParameterPortsNames& vec3Inputs = op->m_view.getInputPortsVec3Names();
-        // for (FabricDFGView::ParameterPortsNames::const_iterator it = vec3Inputs.begin(); it != vec3Inputs.end(); it++)
+        // for (FabricDFGView::ParameterPortsNames::const_iterator it = vec3Inputs.begin(); it != vec3Inputs.end();
+        // it++)
         // {
         //     MultiParams::addVec3ParameterInst(op, *it, Imath::Vec3<float>(0));
         // }
@@ -134,14 +134,16 @@ int FabricDFGOP<OP>::openGraphButtonCallback(void* data, int index, float time, 
 
 template <typename OP>
 PRM_Template FabricDFGOP<OP>::myTemplateList[] = {
-    groupTemplate,                           jsonFilePathTemplate,
-    jsonDataTemplate,                        portsChangedTemplate,
-    createGraphTemplate,                     openGraphButtonTemplate,
+    groupTemplate,                          jsonFilePathTemplate,
+    jsonDataTemplate,                       portsChangedTemplate,
+    createGraphTemplate,                    openGraphButtonTemplate,
     currentFrameTemplate,
 
-    MultiParams::Float32PortsMultiTemplate,  MultiParams::SInt32PortsMultiTemplate,
-    MultiParams::UInt32PortsMultiTemplate,   MultiParams::StringPortsMultiTemplate,
-    MultiParams::FilePathPortsMultiTemplate, MultiParams::Vec3PortsMultiTemplate,
+    MultiParams::Float32PortsMultiTemplate, MultiParams::SInt32PortsMultiTemplate,
+    MultiParams::UInt32PortsMultiTemplate,  MultiParams::IndexPortsMultiTemplate,
+    MultiParams::SizePortsMultiTemplate,    MultiParams::CountPortsMultiTemplate,
+    MultiParams::StringPortsMultiTemplate,  MultiParams::FilePathPortsMultiTemplate,
+    MultiParams::Vec3PortsMultiTemplate,
 
     PRM_Template()
 };
@@ -161,7 +163,7 @@ void FabricDFGOP<OP>::setStringValue(const UT_String& value, const char* name, f
 }
 
 template <typename OP>
-void FabricDFGOP<OP>::loadGraph(const fpreal t)
+void FabricDFGOP<OP>::updateGraph(const fpreal t)
 {
     if (!m_graphLoaded)
     {
@@ -174,16 +176,16 @@ void FabricDFGOP<OP>::loadGraph(const fpreal t)
         try
         {
             getView().createBindingFromJSON(jsonData.buffer());
+            this->m_view.setInputPortsFromOpNode(t); // Needed to get a "type-resolved" graph
+            this->m_view.setMyGraph();
         }
         catch (FabricCore::Exception e)
         {
-            FabricCore::Exception::Throw((std::string("[FabricDFGOP<OP>::loadGraph]: ") + e.getDesc_cstr()).c_str());
+            FabricCore::Exception::Throw((std::string("[FabricDFGOP<OP>::updateGraph]: ") + e.getDesc_cstr()).c_str());
         }
-
-        this->setMultiParameterInputPorts(t);
-        this->m_view.setMyGraph();
-        this->m_view.storeOutputPolymeshPorts();
     }
+
+    this->m_view.setInputPortsFromOpNode(t);
 }
 
 template <typename OP>
@@ -199,73 +201,9 @@ void FabricDFGOP<OP>::executeGraph()
     }
 }
 
-template <typename OP>
-void FabricDFGOP<OP>::setMultiParameterInputPorts(const fpreal t)
-{
-    // Set DFG inputs ports from Houdini inputs multi-parameters
-    int num_param_instances = this->evalFloat("Float32Ports", 0, t);
-    int instance_idx = this->getParm("Float32Ports").getMultiStartOffset();
-    for (size_t i = 0; i < num_param_instances; ++i)
-    {
-        getView().setFloat32PortValue(MultiParams::getParameterInstFloatName(this, instance_idx),
-                                      MultiParams::getParameterInstFloatValue(this, instance_idx, t));
-
-        instance_idx++;
-    }
-
-    num_param_instances = this->evalFloat("SInt32Ports", 0, t);
-    instance_idx = this->getParm("SInt32Ports").getMultiStartOffset();
-    for (size_t i = 0; i < num_param_instances; ++i)
-    {
-        getView().setSInt32PortValue(MultiParams::getParameterInstIntName(this, instance_idx),
-                                     MultiParams::getParameterInstIntValue(this, instance_idx, t));
-
-        instance_idx++;
-    }
-
-    num_param_instances = this->evalFloat("UInt32Ports", 0, t);
-    instance_idx = this->getParm("UInt32Ports").getMultiStartOffset();
-    for (size_t i = 0; i < num_param_instances; ++i)
-    {
-        getView().setSInt32PortValue(MultiParams::getParameterInstIntName(this, instance_idx),
-                                     MultiParams::getParameterInstIntValue(this, instance_idx, t));
-
-        instance_idx++;
-    }
-
-    num_param_instances = this->evalFloat("StringPorts", 0, t);
-    instance_idx = this->getParm("StringPorts").getMultiStartOffset();
-    for (size_t i = 0; i < num_param_instances; ++i)
-    {
-        getView().setStringPortValue(MultiParams::getParameterInstStringName(this, instance_idx),
-                                     MultiParams::getParameterInstStringValue(this, instance_idx, t));
-        instance_idx++;
-    }
-
-    num_param_instances = this->evalFloat("FilePathPorts", 0, t);
-    instance_idx = this->getParm("FilePathPorts").getMultiStartOffset();
-    for (size_t i = 0; i < num_param_instances; ++i)
-    {
-        getView().setFilePathPortValue(MultiParams::getParameterInstStringName(this, instance_idx, "FilePath"),
-                                       MultiParams::getParameterInstStringValue(this, instance_idx, t, "FilePath"));
-        instance_idx++;
-    }
-
-    num_param_instances = this->evalFloat("Vec3Ports", 0, t);
-    instance_idx = this->getParm("Vec3Ports").getMultiStartOffset();
-    for (size_t i = 0; i < num_param_instances; ++i)
-    {
-        getView().setVec3PortValue(MultiParams::getParameterInstVec3Name(this, instance_idx),
-                                   MultiParams::getParameterInstVec3Value(this, instance_idx, t));
-        instance_idx++;
-    }
-}
-
 // Specializations for Houdini operator using Fabric
 
 template class FabricDFGOP<SOP_Node>;
 template class FabricDFGOP<OBJ_Geometry>;
-// template class FabricDFGOP<ROP_Node>;
-// template class FabricDFGOP<VOP_Node>;
 
 } // End namespace OpenSpliceHoudini

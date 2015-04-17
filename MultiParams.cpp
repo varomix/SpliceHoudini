@@ -117,6 +117,7 @@ int MultiParams::addInstance(OP_Parameters* op, const std::string& multiParmName
 }
 
 bool MultiParams::removeInstance(OP_Parameters* op, const std::string& multiParmTypeName, const std::string& name)
+// preconditions: multiParmTypeName is always a supported KL type
 {
     const std::string multiParmName = multiParmTypeName + "Ports";
     const std::string instanceName = multiParmTypeName + "Port#";
@@ -199,16 +200,20 @@ bool MultiParams::removeIntParameterInst(OP_Parameters* op, const std::string& n
     return removeInstance(op, option, name);
 }
 
-const UT_String MultiParams::getParameterInstIntName(OP_Parameters* op, int instance_idx)
+const UT_String MultiParams::getParameterInstIntName(OP_Parameters* op, int instance_idx, const std::string& option)
 {
+    std::string instanceName = option + "Port#";
+
     UT_String name;
-    op->evalStringInst("SInt32Port#", &instance_idx, name, 0, 0);
+    op->evalStringInst(instanceName.c_str(), &instance_idx, name, 0, 0);
+    // op->evalStringInst("SInt32Port#", &instance_idx, name, 0, 0);
     return name;
 }
 
-int MultiParams::getParameterInstIntValue(OP_Parameters* op, int instance_idx, fpreal t)
+int MultiParams::getParameterInstIntValue(OP_Parameters* op, int instance_idx, const std::string& option, fpreal t)
 {
-    return op->evalIntInst("SInt32PortVal#", &instance_idx, 0, t);
+    std::string instanceValName = option + "PortVal#";
+    return op->evalIntInst(instanceValName.c_str(), &instance_idx, 0, t);
 }
 
 void MultiParams::addStringParameterInst(OP_Parameters* op,

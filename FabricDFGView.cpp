@@ -181,7 +181,7 @@ void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPt
             std::cout << "FabricDFGView::onPortResolvedTypeChanged: " << port->getName()
                       << " is a Canvas only input ! Type " << portResolvedType << " not reflected by Houdini"
                       << std::endl;
-        }        
+        }
         break;
     }
 
@@ -190,7 +190,6 @@ void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPt
     case FabricCore::DFGPortType_Out:
         if (portResolvedType == "PolygonMesh")
         {
-            m_outPolyMeshPorts.push_back(port);
             outPutPortChanged = true;
         }
         break;
@@ -198,7 +197,7 @@ void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPt
 
     if (outPutPortChanged)
     {
-        cookMyOp(true);
+        dirtyOp(true);
     }
 }
 
@@ -247,27 +246,13 @@ void FabricDFGView::onPortRemoved(FabricServices::DFGWrapper::PortPtr port)
 void FabricDFGView::onEndPointsConnected(FabricServices::DFGWrapper::EndPointPtr src,
                                          FabricServices::DFGWrapper::EndPointPtr dst)
 {
-    storeOutputPolymeshPorts();
-    cookMyOp(true);
+    dirtyOp(true);
 }
 
-void FabricDFGView::storeOutputPolymeshPorts()
-{
-    std::vector<DFGWrapper::PortPtr> ports = m_binding.getExecutable()->getPorts();
-    for (std::vector<DFGWrapper::PortPtr>::iterator it = ports.begin(); it != ports.end(); it++)
-    {
-        DFGWrapper::PortPtr port = *it;
-        std::string resolvedType(port->getResolvedType());
-
-        if (port->getPortType() == FabricCore::DFGPortType_Out && resolvedType == "PolygonMesh")
-            m_outPolyMeshPorts.push_back(port);
-    }
-}
-
-void FabricDFGView::cookMyOp(bool saveGraph)
+void FabricDFGView::dirtyOp(bool saveGraph)
 {
     int val = m_op->evalInt("__portsChanged", 0, 0);
-    m_op->setInt("__portsChanged", 0, 0, (val + 1) % 2);
+    m_op->setInt("__portsChanged", 0, 0, (val + 1) % INT_MAX);
     if (saveGraph)
         saveJsonData();
 }
@@ -288,11 +273,11 @@ void FabricDFGView::setSInt32PortValue(const char* name, int val)
 }
 
 void FabricDFGView::setUInt32PortValue(const char* name, int val)
-{
+{ 
     DFGWrapper::PortPtr port = m_binding.getExecutable()->getPort(name);
     if (port->isValid())
     {
-        FabricCore::RTVal rtVal = FabricCore::RTVal::ConstructUInt32(s_client, val);
+        FabricCore::RTVal rtVal = FabricCore::RTVal::ConstructUInt32(s_client, static_cast<size_t>(val));
         m_binding.setArgValue(name, rtVal);
     }
 }
@@ -346,6 +331,110 @@ FabricCore::RTVal FabricDFGView::getMat44RTVal(const char* name)
 {
     FabricCore::RTVal rtVal = m_binding.getArgValue(name);
     return rtVal;
+}
+
+DFGWrapper::PortList FabricDFGView::getPolygonMeshOutputPorts()
+{
+    DFGWrapper::PortList outPorts;
+    DFGWrapper::PortList ports = m_binding.getExecutable()->getPorts();
+    for (DFGWrapper::PortList::const_iterator it = ports.begin(); it != ports.end(); it++)
+    {
+        if ((*it)->getPortType() == FabricCore::DFGPortType_Out)
+            outPorts.push_back(*it);
+    }
+
+    return outPorts;
+}
+
+void FabricDFGView::setInputPortsFromOpNode(const float t)
+{
+    // Set DFG inputs ports from Houdini inputs multi-parameters
+    int num_param_instances = m_op->evalFloat("Float32Ports", 0, t);
+    int instance_idx = m_op->getParm("Float32Ports").getMultiStartOffset();
+    for (size_t i = 0; i < num_param_instances; ++i)
+    {
+        setFloat32PortValue(MultiParams::getParameterInstFloatName(m_op, instance_idx),
+                            MultiParams::getParameterInstFloatValue(m_op, instance_idx, t));
+
+        instance_idx++;
+    }
+
+    num_param_instances = m_op->evalFloat("SInt32Ports", 0, t);
+    instance_idx = m_op->getParm("SInt32Ports").getMultiStartOffset();
+    for (size_t i = 0; i < num_param_instances; ++i)
+    {
+        setSInt32PortValue(MultiParams::getParameterInstIntName(m_op, instance_idx, "SInt32"),
+                           MultiParams::getParameterInstIntValue(m_op, instance_idx, "SInt32", t));
+
+        instance_idx++;
+    }
+
+    num_param_instances = m_op->evalFloat("UInt32Ports", 0, t);
+    instance_idx = m_op->getParm("UInt32Ports").getMultiStartOffset();
+    for (size_t i = 0; i < num_param_instances; ++i)
+    {
+        setUInt32PortValue(MultiParams::getParameterInstIntName(m_op, instance_idx, "UInt32"),
+                           MultiParams::getParameterInstIntValue(m_op, instance_idx, "UInt32", t));
+
+        instance_idx++;
+    }
+
+    num_param_instances = m_op->evalFloat("IndexPorts", 0, t);
+    instance_idx = m_op->getParm("IndexPorts").getMultiStartOffset();
+    for (size_t i = 0; i < num_param_instances; ++i)
+    {
+        setUInt32PortValue(MultiParams::getParameterInstIntName(m_op, instance_idx, "Index"),
+                           MultiParams::getParameterInstIntValue(m_op, instance_idx, "Index", t));
+
+        instance_idx++;
+    }
+
+    num_param_instances = m_op->evalFloat("SizePorts", 0, t);
+    instance_idx = m_op->getParm("SizePorts").getMultiStartOffset();
+    for (size_t i = 0; i < num_param_instances; ++i)
+    {
+        setUInt32PortValue(MultiParams::getParameterInstIntName(m_op, instance_idx, "Size"),
+                           MultiParams::getParameterInstIntValue(m_op, instance_idx, "Size", t));
+
+        instance_idx++;
+    }
+
+    num_param_instances = m_op->evalFloat("CountPorts", 0, t);
+    instance_idx = m_op->getParm("CountPorts").getMultiStartOffset();
+    for (size_t i = 0; i < num_param_instances; ++i)
+    {
+        setUInt32PortValue(MultiParams::getParameterInstIntName(m_op, instance_idx, "Count"),
+                           MultiParams::getParameterInstIntValue(m_op, instance_idx, "Count", t));
+
+        instance_idx++;
+    }
+
+    num_param_instances = m_op->evalFloat("StringPorts", 0, t);
+    instance_idx = m_op->getParm("StringPorts").getMultiStartOffset();
+    for (size_t i = 0; i < num_param_instances; ++i)
+    {
+        setStringPortValue(MultiParams::getParameterInstStringName(m_op, instance_idx),
+                           MultiParams::getParameterInstStringValue(m_op, instance_idx, t));
+        instance_idx++;
+    }
+
+    num_param_instances = m_op->evalFloat("FilePathPorts", 0, t);
+    instance_idx = m_op->getParm("FilePathPorts").getMultiStartOffset();
+    for (size_t i = 0; i < num_param_instances; ++i)
+    {
+        setFilePathPortValue(MultiParams::getParameterInstStringName(m_op, instance_idx, "FilePath"),
+                             MultiParams::getParameterInstStringValue(m_op, instance_idx, t, "FilePath"));
+        instance_idx++;
+    }
+
+    num_param_instances = m_op->evalFloat("Vec3Ports", 0, t);
+    instance_idx = m_op->getParm("Vec3Ports").getMultiStartOffset();
+    for (size_t i = 0; i < num_param_instances; ++i)
+    {
+        setVec3PortValue(MultiParams::getParameterInstVec3Name(m_op, instance_idx),
+                         MultiParams::getParameterInstVec3Value(m_op, instance_idx, t));
+        instance_idx++;
+    }
 }
 
 void FabricDFGView::logFunc(void* userData, const char* message, unsigned int length)

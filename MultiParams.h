@@ -84,8 +84,10 @@ public:
 
     static bool
     removeIntParameterInst(OP_Parameters* op, const std::string& name, const std::string& option = "SInt32");
-    static const UT_String getParameterInstIntName(OP_Parameters* op, int instance_idx);
-    static int getParameterInstIntValue(OP_Parameters* op, int instance_idx, fpreal t = 0);
+    static const UT_String
+    getParameterInstIntName(OP_Parameters* op, int instance_idx, const std::string& option = "SInt32");
+    static int
+    getParameterInstIntValue(OP_Parameters* op, int instance_idx, const std::string& option = "SInt32", fpreal t = 0);
 
     static void addStringParameterInst(OP_Parameters* op,
                                        const std::string& name,
@@ -115,7 +117,6 @@ public:
     {
         addVec3ParameterInst(op, name, Imath::Vec3<float>(0));
     }
-    
 
     static bool removeVec3ParameterInst(OP_Parameters* op, const std::string& name);
     static const UT_String getParameterInstVec3Name(OP_Parameters* op, int instance_idx);

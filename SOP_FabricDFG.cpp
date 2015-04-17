@@ -47,17 +47,15 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
     try
     {
         fpreal now = context.getTime();
-        loadGraph(now);
+        updateGraph(now);
         executeGraph();
 
         gdp->clearAndDestroy();
 
-        FabricDFGView::OutputPorts outPortsPolyMesh = getView().getPolygonMeshPorts();
-        std::cout << "outPortsPolyMesh.size() " << outPortsPolyMesh.size() << std::endl;
-        if (outPortsPolyMesh.size() > 0)
+        FabricServices::DFGWrapper::PortList polyMeshOutputPorts = getView().getPolygonMeshOutputPorts();
+        if (polyMeshOutputPorts.size() > 0)
         {
-
-            FabricCore::RTVal rtMesh = getView().getBinding()->getArgValue(outPortsPolyMesh[0]->getName());
+            FabricCore::RTVal rtMesh = getView().getBinding()->getArgValue(polyMeshOutputPorts[0]->getName());
 
             size_t nbPoints = 0;
             size_t nbPolygons = 0;

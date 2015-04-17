@@ -24,10 +24,6 @@ class FabricDFGView : public FabricServices::DFGWrapper::View
 {
 
 public:
-    typedef std::vector<std::string> ParameterPortsNames;
-    typedef std::vector<std::string> OutputPortsNames;
-    typedef std::vector<FabricServices::DFGWrapper::PortPtr> OutputPorts;
-
     FabricDFGView(OP_Node* op);
     ~FabricDFGView();
 
@@ -137,7 +133,7 @@ private:
     static unsigned int s_maxId;
     static std::map<unsigned int, FabricDFGView*> s_instances;
 
-    // This part should be moved
+    // Houdini and DFG bindings
 public:
     void setSInt32PortValue(const char* name, int val);
     void setUInt32PortValue(const char* name, int val);
@@ -148,34 +144,21 @@ public:
 
     FabricCore::RTVal getMat44RTVal(const char* name);
 
-    OutputPorts getPolygonMeshPorts() const
-    {
-        return m_outPolyMeshPorts;
-    }
+    FabricServices::DFGWrapper::PortList getPolygonMeshOutputPorts();
 
-public:
-    void storeOutputPolymeshPorts();
-    
+    void setInputPortsFromOpNode(const float t);
+
     void setMyGraph()
     {
         setGraph(FabricServices::DFGWrapper::GraphExecutablePtr::StaticCast(m_binding.getExecutable()));
     }
 
-
 private:
-    void cookMyOp(bool saveGraph);
+    void dirtyOp(bool saveGraph);
     void saveJsonData();
-
-    std::map<std::string, ParameterPortsNames*> m_parameterPortsMap;
-
-    OutputPortsNames m_outPolygonMeshNames;
-    OutputPortsNames m_outMat44Names;
-
-    OutputPorts m_outPolyMeshPorts;
 
     FabricDFGWidgetPtr m_widget;
     OP_Node* m_op;
-
 };
 } // End namespace OpenSpliceHoudini
 

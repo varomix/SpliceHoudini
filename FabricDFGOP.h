@@ -68,9 +68,8 @@ protected:
         return m_view;
     }
 
-    void loadGraph(const fpreal t);
+    void updateGraph(const fpreal t);
     void executeGraph();
-    void setMultiParameterInputPorts(const fpreal t);
 
     bool m_graphLoaded;
 

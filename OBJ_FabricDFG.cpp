@@ -100,12 +100,11 @@ int OBJ_FabricDFG::applyInputIndependentTransform(OP_Context& context, UT_DMatri
         int modified = OBJ_Geometry::applyInputIndependentTransform(context, mat);
 
         fpreal now = context.getTime();
-        loadGraph(now);
-        setMultiParameterInputPorts(now);
+        updateGraph(now);
         executeGraph();
 
         FabricServices::DFGWrapper::PortPtr port = getView().getGraph()->getPort("t");
-        if (port->isValid() && std::string(port->getResolvedType()) == "Vec3")
+        if (std::string(port->getResolvedType()) == "Vec3")
         {
             float t[3];
             std::vector<FabricCore::RTVal> args(2);
@@ -118,7 +117,7 @@ int OBJ_FabricDFG::applyInputIndependentTransform(OP_Context& context, UT_DMatri
         }
 
         port = getView().getGraph()->getPort("r");
-        if (port->isValid() && std::string(port->getResolvedType()) == "Vec3")
+        if (std::string(port->getResolvedType()) == "Vec3")
         {
             float r[3];
             std::vector<FabricCore::RTVal> args(2);
@@ -131,7 +130,7 @@ int OBJ_FabricDFG::applyInputIndependentTransform(OP_Context& context, UT_DMatri
         }
 
         port = getView().getGraph()->getPort("s");
-        if (port->isValid() && std::string(port->getResolvedType()) == "Vec3")
+        if (std::string(port->getResolvedType()) == "Vec3")
         {
             float s[3];
             std::vector<FabricCore::RTVal> args(2);
