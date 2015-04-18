@@ -248,6 +248,30 @@ void FabricDFGView::onEndPointsConnected(FabricServices::DFGWrapper::EndPointPtr
     dirtyOp(true);
 }
 
+void FabricDFGView::addParametersFromInputPorts()
+{
+    DFGWrapper::PortList ports = m_binding.getExecutable()->getPorts();
+    for (DFGWrapper::PortList::const_iterator it = ports.begin(); it != ports.end(); it++)
+    {
+        DFGWrapper::PortPtr port = *it;
+        if (port->getPortType() == FabricCore::DFGPortType_In)
+        {
+            std::string resolvedType(port->getResolvedType());
+            ParameterFactory::CreateParameterFunc addParam = ParameterFactory::Get(resolvedType);
+            if (addParam)
+            {
+                addParam(m_op, port->getName());
+            }
+            else
+            {
+                std::cout << "FabricDFGView::onPortResolvedTypeChanged: " << port->getName()
+                          << " is a Canvas only input ! Type " << resolvedType << " not reflected by Houdini"
+                          << std::endl;
+            }
+        }
+    }
+}
+
 void FabricDFGView::dirtyOp(bool saveGraph)
 {
     int val = m_op->evalInt("__portsChanged", 0, 0);

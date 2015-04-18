@@ -19,7 +19,7 @@ class OP_Node;
 namespace OpenSpliceHoudini
 {
 
-/// Implementation of the DFGWrapper::View
+/// A Fabric View with access to an Houdini node
 class FabricDFGView : public FabricServices::DFGWrapper::View
 {
 
@@ -52,6 +52,12 @@ public:
     static void (*s_logFunc)(void*, const char*, unsigned int);
     static void (*s_logErrorFunc)(void*, const char*, unsigned int);
 
+    void setWidget(FabricDFGWidgetPtr widget)
+    {
+        m_widget = widget;
+    }
+
+protected:
     // notifications
     // for now we only implement onPortInserted and onPortRemoved
     virtual void onNotification(char const* json)
@@ -115,11 +121,6 @@ public:
     {
     }
 
-    void setWidget(FabricDFGWidgetPtr widget)
-    {
-        m_widget = widget;
-    }
-
 private:
     static void logFunc(void* userData, const char* message, unsigned int length);
 
@@ -135,6 +136,8 @@ private:
 
     // Houdini and DFG bindings
 public:
+
+    void addParametersFromInputPorts();
     void setSInt32PortValue(const char* name, int val);
     void setUInt32PortValue(const char* name, int val);
     void setFloat32PortValue(const char* name, float val);
