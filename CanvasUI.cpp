@@ -19,13 +19,10 @@ void CanvasUI::show()
     FabricDFGWidgetPtr dfgw(new FabricDFGWidget(parent, &m_view));
     dfgw->setOp(m_op);
     m_view.setWidget(dfgw);
-    // Qt::WindowFlags flags = dfgw->windowFlags();
-    // dfgw->setWindowFlags(flags | Qt::WindowStaysOnTopHint);
     UT_WorkBuffer opFullName;
     m_op->getFullPath(opFullName);
     dfgw->setWindowTitle(opFullName.buffer());
     dfgw->show();
-    // dfgw->raise();
     dfgw->activateWindow();
 }
 }

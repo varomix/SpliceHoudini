@@ -52,6 +52,11 @@ public:
     static void (*s_logFunc)(void*, const char*, unsigned int);
     static void (*s_logErrorFunc)(void*, const char*, unsigned int);
 
+    void setMyGraph()
+    {
+        setGraph(FabricServices::DFGWrapper::GraphExecutablePtr::StaticCast(m_binding.getExecutable()));
+    }
+
     void setWidget(FabricDFGWidgetPtr widget)
     {
         m_widget = widget;
@@ -134,10 +139,6 @@ private:
     static unsigned int s_maxId;
     static std::map<unsigned int, FabricDFGView*> s_instances;
 
-    // Houdini and DFG bindings
-public:
-
-    void addParametersFromInputPorts();
     void setSInt32PortValue(const char* name, int val);
     void setUInt32PortValue(const char* name, int val);
     void setFloat32PortValue(const char* name, float val);
@@ -145,16 +146,12 @@ public:
     void setFilePathPortValue(const char* name, const char* val);
     void setVec3PortValue(const char* name, const Imath::Vec3<float>& val);
 
-    FabricCore::RTVal getMat44RTVal(const char* name);
+public:
+    // Houdini and DFG bindings
 
+    void addParametersFromInputPorts();
     FabricServices::DFGWrapper::PortList getPolygonMeshOutputPorts();
-
     void setInputPortsFromOpNode(const float t);
-
-    void setMyGraph()
-    {
-        setGraph(FabricServices::DFGWrapper::GraphExecutablePtr::StaticCast(m_binding.getExecutable()));
-    }
 
 private:
     void dirtyOp(bool saveGraph);

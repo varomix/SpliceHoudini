@@ -350,12 +350,6 @@ void FabricDFGView::setVec3PortValue(const char* name, const Imath::Vec3<float>&
     }
 }
 
-FabricCore::RTVal FabricDFGView::getMat44RTVal(const char* name)
-{
-    FabricCore::RTVal rtVal = m_binding.getArgValue(name);
-    return rtVal;
-}
-
 DFGWrapper::PortList FabricDFGView::getPolygonMeshOutputPorts()
 {
     DFGWrapper::PortList outPorts;
