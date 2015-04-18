@@ -1,5 +1,3 @@
-// #define FEC_SHARED
-
 #include <OP/OP_OperatorTable.h>
 #include "SOP_FabricDFG.h"
 #include "OBJ_FabricDFG.h"
