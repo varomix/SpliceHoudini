@@ -188,7 +188,7 @@ void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPt
     case FabricCore::DFGPortType_IO:
         break;
     case FabricCore::DFGPortType_Out:
-        if (portResolvedType == "PolygonMesh")
+        if (portResolvedType == "PolygonMesh" || portResolvedType == "Vec3")
         {
             outPutPortChanged = true;
         }
@@ -208,6 +208,7 @@ void FabricDFGView::onPortRenamed(FabricServices::DFGWrapper::PortPtr port, cons
     {
         MultiParams::renameInstance(m_op, resolvedType, oldName, port->getName());
         saveJsonData();
+        dirtyOp(true);
     }
 }
 
