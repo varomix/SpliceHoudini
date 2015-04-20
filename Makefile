@@ -9,6 +9,7 @@ SOURCES = \
 	MultiParams.cpp \
 	FabricDFGOP.cpp \
 	SOP_FabricDFG.cpp \
+	SOP_FabricDFGDeformer.cpp \
 	OBJ_FabricDFG.cpp \
 	${WIDGET}.cpp \
 	moc_${WIDGET}.cpp \

@@ -16,9 +16,6 @@
 #define FEC_PROVIDE_STL_BINDINGS
 
 using namespace OpenSpliceHoudini;
-using std::cout;
-using std::endl;
-using std::boolalpha;
 
 OP_Node* SOP_FabricDFG::myConstructor(OP_Network* net, const char* name, OP_Operator* op)
 {
@@ -49,7 +46,7 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
         fpreal now = context.getTime();
         updateGraph(now);
         executeGraph();
-
+        
         gdp->clearAndDestroy();
 
         FabricServices::DFGWrapper::PortList polyMeshOutputPorts = getView().getPolygonMeshOutputPorts();

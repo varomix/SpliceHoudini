@@ -77,6 +77,7 @@ private:
     // MultiParams m_multiparms;
     FabricDFGView m_view;
     CanvasUI m_ui;
+
 };
 
 } // End namespace OpenSpliceHoudini
