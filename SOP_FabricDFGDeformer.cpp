@@ -17,6 +17,32 @@
 
 using namespace OpenSpliceHoudini;
 
+PRM_Name bindPointPositionsButton("bindPointPositions", "Bind Points Positions");
+PRM_Template bindPointPositionsTemplate(
+    PRM_CALLBACK, 1, &bindPointPositionsButton, 0, 0, 0, &SOP_FabricDFGDeformer::bindPointPositionsCallback);
+
+int SOP_FabricDFGDeformer::bindPointPositionsCallback(void* data, int index, float time, const PRM_Template* tplate)
+{
+    SOP_FabricDFGDeformer* op = reinterpret_cast<SOP_FabricDFGDeformer*>(data);
+    op->addExternalArrayGraphPointPositions();
+    return 1;
+}
+
+OP_TemplatePair* SOP_FabricDFGDeformer::buildTemplatePair(OP_TemplatePair* prevstuff)
+{
+    static PRM_Template* theTemplate = 0;
+    theTemplate = new PRM_Template[2];
+
+    theTemplate[0] = bindPointPositionsTemplate;
+    theTemplate[1] = PRM_Template();
+
+    OP_TemplatePair* dfg, *geo;
+    dfg = new OP_TemplatePair(myTemplateList, prevstuff);
+    geo = new OP_TemplatePair(theTemplate, dfg);
+
+    return geo;
+}
+
 OP_Node* SOP_FabricDFGDeformer::myConstructor(OP_Network* net, const char* name, OP_Operator* op)
 {
     return new SOP_FabricDFGDeformer(net, name, op);
@@ -25,21 +51,21 @@ OP_Node* SOP_FabricDFGDeformer::myConstructor(OP_Network* net, const char* name,
 SOP_FabricDFGDeformer::SOP_FabricDFGDeformer(OP_Network* net, const char* name, OP_Operator* op)
     : FabricDFGOP<SOP_Node>(net, name, op)
 {
-    addExternalArrayGraph();
+    mySopFlags.setManagesDataIDs(true);
 }
 
 SOP_FabricDFGDeformer::~SOP_FabricDFGDeformer()
 {
 }
 
-void SOP_FabricDFGDeformer::addExternalArrayGraph()
+void SOP_FabricDFGDeformer::addExternalArrayGraphPointPositions()
 {
     // External arrays
     DFGWrapper::GraphExecutablePtr graph = getView().getGraph();
     try
     {
         FabricServices::DFGWrapper::PortPtr port = graph->getPort("P");
-        if (std::string(port->getResolvedType()) != "Float32<>")
+        if (std::string(port->getResolvedType()) != "Vec3<>")
         {
             std::cout << "User defined Port P used. Can't access Houdini geometry !" << std::endl;
         }
@@ -51,17 +77,10 @@ void SOP_FabricDFGDeformer::addExternalArrayGraph()
 
         graph->addPort("P", FabricCore::DFGPortType_IO);
 
-        // graph->addPort("factor", FabricCore::DFGPortType_In);
-        // FabricCore::RTVal value = FabricCore::RTVal::ConstructFloat32(client, 2.3);
-        // binding.setArgValue("factor", value);
-
-
         DFGWrapper::NodePtr getNode = graph->addNodeFromPreset("Fabric.Core.Array.Get");
         DFGWrapper::NodePtr addNode = graph->addNodeFromPreset("Fabric.Core.Math.Add");
         graph->getPort("P")->connectTo(getNode->getPin("array"));
         getNode->getPin("element")->connectTo(addNode->getPin("lhs"));
-
-        // graph->getPort("factor")->connectTo(addNode->getPin("rhs"));
 
         DFGWrapper::NodePtr setNode = graph->addNodeFromPreset("Fabric.Core.Array.Set");
         graph->getPort("P")->connectTo(setNode->getPin("array"));
@@ -74,14 +93,14 @@ void SOP_FabricDFGDeformer::addExternalArrayGraph()
 void SOP_FabricDFGDeformer::setExternalArrayPoint(OP_Context& context, const char* name)
 {
     GA_RWHandleV3 handle(gdp->findAttribute(GA_ATTRIB_POINT, name));
-    if(!handle.isValid())
+    if (!handle.isValid())
         return;
-    
+
     GA_Size nelements = static_cast<GA_Size>(gdp->getNumPoints());
-    size_t arraySize =  static_cast<size_t>(gdp->getNumPoints());
+    // FabricCore::RTVal::ConstructExternalArray is expecting a size_t type !
+    size_t arraySize = static_cast<size_t>(gdp->getNumPoints());
     m_array.resize(arraySize);
     handle.getBlock(GA_Offset(), nelements, &m_array[0]);
-
 
     FabricCore::Client client = *(getView().getClient());
     DFGWrapper::Binding binding = *(getView().getBinding());
@@ -97,6 +116,14 @@ void SOP_FabricDFGDeformer::setExternalArrayPoint(OP_Context& context, const cha
     }
 }
 
+void SOP_FabricDFGDeformer::setPointPositions(OP_Context& context)
+{
+    GA_RWHandleV3 handle(gdp->findAttribute(GA_ATTRIB_POINT, "P"));
+    GA_Size nelements = static_cast<GA_Size>(gdp->getNumPoints());
+    handle.setBlock(GA_Offset(), nelements, &m_array[0]);
+    handle.bumpDataId();
+}
+
 OP_ERROR SOP_FabricDFGDeformer::cookMySop(OP_Context& context)
 {
     OP_AutoLockInputs inputs(this);
@@ -110,17 +137,17 @@ OP_ERROR SOP_FabricDFGDeformer::cookMySop(OP_Context& context)
     {
         fpreal now = context.getTime();
 
-        setExternalArrayPoint(context, "P");
         updateGraph(now);
-        executeGraph(); 
+        setExternalArrayPoint(context, "P");
+        executeGraph();
 
-        if(m_array.size() > 0)
+        if (m_array.size() > 0)
         {
-            for(size_t i=0; i< 3; i++)       
+            for (size_t i = 0; i < 3; i++)
                 std::cout << "EXTERNAL ARRAY VALUE " << i << ": " << m_array[i].x() << std::endl;
-            
-        }
 
+            setPointPositions(context);
+        }
     }
     catch (FabricCore::Exception e)
     {
