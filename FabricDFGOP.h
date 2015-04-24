@@ -21,6 +21,8 @@ namespace OpenSpliceHoudini
 
 class CanvasUI;
 
+typedef void (*CopyAttributesFunc)(OP_Network& node, DFGWrapper::Binding& binding);
+
 /// Use this class as a base for any custom operator (SOP/ROP/GEO/etc...)
 /// integrating Fabric DFG.
 /// It will provide the functionality to create the graph and connect it to the
@@ -29,6 +31,7 @@ template <typename OP>
 class FabricDFGOP : public OP
 {
 public:
+
     FabricDFGOP(OP_Network* net, const char* name, OP_Operator* op);
 
     // static PRM_Name groupName;
@@ -71,6 +74,7 @@ protected:
     void updateGraph(const fpreal t);
     void executeGraph();
 
+    static CopyAttributesFunc s_copyAttributesFunc;
     bool m_graphLoaded;
 
 private:

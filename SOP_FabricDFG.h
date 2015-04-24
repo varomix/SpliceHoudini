@@ -17,6 +17,8 @@ protected:
     SOP_FabricDFG(OP_Network* net, const char* name, OP_Operator* op);
     virtual ~SOP_FabricDFG();
     virtual OP_ERROR cookMySop(OP_Context& context);
+
+    static void copyAttributes(OP_Network& node, DFGWrapper::Binding& binding);
 };
 
 class OP_FabricDFG : public OP_Operator
@@ -24,7 +26,7 @@ class OP_FabricDFG : public OP_Operator
 public:
     OP_FabricDFG()
         : OP_Operator("fabricDFG",                   // Internal name
-                      "Fabric Generator",      // UI name
+                      "Fabric Generator",            // UI name
                       SOP_FabricDFG::myConstructor,  // How to build the SOP
                       SOP_FabricDFG::myTemplateList, // My parameters
                       0,                             // Min # of node inputs

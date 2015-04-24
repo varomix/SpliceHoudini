@@ -10,6 +10,7 @@ SOURCES = \
 	FabricDFGOP.cpp \
 	SOP_FabricDFG.cpp \
 	SOP_FabricDFGDeformer.cpp \
+	SOP_FabricAttributeModifier.cpp \
 	OBJ_FabricDFG.cpp \
 	${WIDGET}.cpp \
 	moc_${WIDGET}.cpp \

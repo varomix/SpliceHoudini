@@ -165,10 +165,10 @@ void FabricDFGView::onPortInserted(FabricServices::DFGWrapper::PortPtr port)
 void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPtr port, const char* resolvedType)
 {
     std::string portResolvedType(resolvedType);
-    bool outPutPortChanged = false;
 
     switch (port->getPortType())
     {
+
     case FabricCore::DFGPortType_In:
     {
         ParameterFactory::CreateParameterFunc addParam = ParameterFactory::Get(portResolvedType);
@@ -186,18 +186,17 @@ void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPt
     }
 
     case FabricCore::DFGPortType_IO:
-        break;
-    case FabricCore::DFGPortType_Out:
-        if (portResolvedType == "PolygonMesh" || portResolvedType == "Vec3")
-        {
-            outPutPortChanged = true;
-        }
+    {
+        dirtyOp(true);
         break;
     }
 
-    if (outPutPortChanged)
-    {
-        dirtyOp(true);
+    case FabricCore::DFGPortType_Out:
+        if (portResolvedType == "PolygonMesh" || portResolvedType == "Vec3")
+        {
+            dirtyOp(true);
+        }
+        break;
     }
 }
 

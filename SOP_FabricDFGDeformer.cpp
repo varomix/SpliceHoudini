@@ -12,36 +12,11 @@
 #include <OP/OP_AutoLockInputs.h>
 
 #include <ImathVec.h>
+#include <boost/lexical_cast.hpp>
 
 #define FEC_PROVIDE_STL_BINDINGS
 
 using namespace OpenSpliceHoudini;
-
-PRM_Name bindPointPositionsButton("bindPointPositions", "Bind Points Positions");
-PRM_Template bindPointPositionsTemplate(
-    PRM_CALLBACK, 1, &bindPointPositionsButton, 0, 0, 0, &SOP_FabricDFGDeformer::bindPointPositionsCallback);
-
-int SOP_FabricDFGDeformer::bindPointPositionsCallback(void* data, int index, float time, const PRM_Template* tplate)
-{
-    SOP_FabricDFGDeformer* op = reinterpret_cast<SOP_FabricDFGDeformer*>(data);
-    op->addExternalArrayGraphPointPositions();
-    return 1;
-}
-
-OP_TemplatePair* SOP_FabricDFGDeformer::buildTemplatePair(OP_TemplatePair* prevstuff)
-{
-    static PRM_Template* theTemplate = 0;
-    theTemplate = new PRM_Template[2];
-
-    theTemplate[0] = bindPointPositionsTemplate;
-    theTemplate[1] = PRM_Template();
-
-    OP_TemplatePair* dfg, *geo;
-    dfg = new OP_TemplatePair(myTemplateList, prevstuff);
-    geo = new OP_TemplatePair(theTemplate, dfg);
-
-    return geo;
-}
 
 OP_Node* SOP_FabricDFGDeformer::myConstructor(OP_Network* net, const char* name, OP_Operator* op)
 {
@@ -52,76 +27,146 @@ SOP_FabricDFGDeformer::SOP_FabricDFGDeformer(OP_Network* net, const char* name, 
     : FabricDFGOP<SOP_Node>(net, name, op)
 {
     mySopFlags.setManagesDataIDs(true);
+    s_copyAttributesFunc = SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes;
 }
 
 SOP_FabricDFGDeformer::~SOP_FabricDFGDeformer()
 {
 }
 
-void SOP_FabricDFGDeformer::addExternalArrayGraphPointPositions()
+FabricCore::RTVal SOP_FabricDFGDeformer::ConstructPositionsRTVal(const GU_Detail& gdpRef,
+                                                                 SOP_FabricDFGDeformer& sopDeformerNode)
 {
-    // External arrays
-    DFGWrapper::GraphExecutablePtr graph = getView().getGraph();
-    try
+    FabricCore::RTVal positions;
+    FabricCore::Client client = *(sopDeformerNode.getView().getClient());
+
+    GA_ROHandleV3 handle(gdpRef.findAttribute(GA_ATTRIB_POINT, "P"));
+    if (handle.isValid())
     {
-        FabricServices::DFGWrapper::PortPtr port = graph->getPort("P");
-        if (std::string(port->getResolvedType()) != "Vec3<>")
+        size_t bufferSize = static_cast<size_t>(gdpRef.getNumPoints());
+        FabricCore::Client client = *(sopDeformerNode.getView().getClient());
+        positions = FabricCore::RTVal::ConstructFixedArray(client, "Vec3", bufferSize);
+
+        // Fill the RTVal array with P values
+        GA_Offset ptoff;
+        UT_Vector3 val;
+        FabricCore::RTVal rtVec[3];
+        GA_FOR_ALL_PTOFF(&gdpRef, ptoff)
         {
-            std::cout << "User defined Port P used. Can't access Houdini geometry !" << std::endl;
+            val = handle.get(ptoff);
+            rtVec[0] = FabricCore::RTVal::ConstructFloat32(client, val.x());
+            rtVec[1] = FabricCore::RTVal::ConstructFloat32(client, val.y());
+            rtVec[2] = FabricCore::RTVal::ConstructFloat32(client, val.z());
+            FabricCore::RTVal rtVal = FabricCore::RTVal::Construct(client, "Vec3", 3, &rtVec[0]);
+            positions.setArrayElement(ptoff, rtVal);
         }
     }
-    catch (FabricCore::Exception e)
+    return positions;
+}
+
+FabricCore::RTVal SOP_FabricDFGDeformer::ConstructPolygonMeshRTVal(const GU_Detail& gdpRef,
+                                                                   SOP_FabricDFGDeformer& sopDeformerNode)
+{
+    FabricCore::RTVal polygonMesh;
+    FabricCore::Client client = *(sopDeformerNode.getView().getClient());
+
+    GA_ROHandleV3 handle(gdpRef.findAttribute(GA_ATTRIB_POINT, "P"));
+    if (handle.isValid())
     {
-        FabricCore::Client client = *(getView().getClient());
-        DFGWrapper::Binding binding = *(getView().getBinding());
+        GA_Size nElements = static_cast<GA_Size>(gdpRef.getNumPoints());
+        size_t bufferSize = static_cast<size_t>(nElements);
+        std::vector<UT_Vector3F> posBuffer;
+        posBuffer.resize(bufferSize);
+        handle.getBlock(GA_Offset(), nElements, &posBuffer[0]);
 
-        graph->addPort("P", FabricCore::DFGPortType_IO);
+        try
+        {
+            polygonMesh = FabricCore::RTVal::Construct(client, "PolygonMesh", 0, 0);
+            std::vector<FabricCore::RTVal> args(2);
+            args[0] = FabricCore::RTVal::ConstructExternalArray(client, "Float32", bufferSize * 3, &posBuffer[0]);
+            args[1] = FabricCore::RTVal::ConstructUInt32(client, 3);
+            polygonMesh.callMethod("", "setPointsFromExternalArray", 2, &args[0]);
+        }
+        catch (FabricCore::Exception e)
+        {
+            FabricCore::Exception::Throw(
+                (std::string("[SOP_FabricDFGDeformer::ConstructPolygonMeshRTVal]: ") + e.getDesc_cstr()).c_str());
+        }
+    }
 
-        DFGWrapper::NodePtr getNode = graph->addNodeFromPreset("Fabric.Core.Array.Get");
-        DFGWrapper::NodePtr addNode = graph->addNodeFromPreset("Fabric.Core.Math.Add");
-        graph->getPort("P")->connectTo(getNode->getPin("array"));
-        getNode->getPin("element")->connectTo(addNode->getPin("lhs"));
+    return polygonMesh;
+}
 
-        DFGWrapper::NodePtr setNode = graph->addNodeFromPreset("Fabric.Core.Array.Set");
-        graph->getPort("P")->connectTo(setNode->getPin("array"));
-        addNode->getPin("result")->connectTo(setNode->getPin("element"));
+void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWrapper::Binding& binding)
+{
+    SOP_FabricDFGDeformer& sopDeformerNode = static_cast<SOP_FabricDFGDeformer&>(node);
+    GU_Detail& gdpRef = *(sopDeformerNode.gdp);
 
-        setNode->getPin("array")->connectTo(graph->getPort("P"));
+    DFGWrapper::PortList ports = binding.getExecutable()->getPorts();
+    for (DFGWrapper::PortList::const_iterator it = ports.begin(); it != ports.end(); it++)
+    {
+        DFGWrapper::PortPtr port = *it;
+        if (port->getPortType() == FabricCore::DFGPortType_In)
+        {
+            std::string name(port->getName());
+            std::string resolvedType(port->getResolvedType());
+
+            if (resolvedType == "PolygonMesh")
+            {
+                FabricCore::RTVal polygonMesh = ConstructPolygonMeshRTVal(gdpRef, sopDeformerNode);
+
+                size_t nbPoints = polygonMesh.callMethod("Size", "pointCount", 0, 0).getUInt32();
+
+                std::cout << "PolygonMesh got: " << nbPoints << " points from Houdini gdp" << std::endl;
+            }
+
+            else if (name == "fromP" && resolvedType == "Vec3[]")
+            {
+                FabricCore::RTVal positions = ConstructPositionsRTVal(gdpRef, sopDeformerNode);
+
+                sopDeformerNode.getView().getBinding()->setArgValue("fromP", positions);
+            }
+        }
     }
 }
 
-void SOP_FabricDFGDeformer::setExternalArrayPoint(OP_Context& context, const char* name)
+void SOP_FabricDFGDeformer::setPointsPositions(OP_Context& context)
 {
-    GA_RWHandleV3 handle(gdp->findAttribute(GA_ATTRIB_POINT, name));
-    if (!handle.isValid())
-        return;
 
-    GA_Size nelements = static_cast<GA_Size>(gdp->getNumPoints());
-    // FabricCore::RTVal::ConstructExternalArray is expecting a size_t type !
-    size_t arraySize = static_cast<size_t>(gdp->getNumPoints());
-    m_array.resize(arraySize);
-    handle.getBlock(GA_Offset(), nelements, &m_array[0]);
+    // GA_Size nelements = static_cast<GA_Size>(gdp->getNumPoints());
+    // std::string resolvedTypeToMatch = "Vec3[" + boost::lexical_cast<std::string>(nelements) + "]";
+    std::string resolvedTypeToMatch = "Vec3[]";
 
-    FabricCore::Client client = *(getView().getClient());
-    DFGWrapper::Binding binding = *(getView().getBinding());
-    FabricCore::RTVal extArrayValue;
-    try
+    DFGWrapper::PortList ports = getView().getBinding()->getExecutable()->getPorts();
+    for (DFGWrapper::PortList::const_iterator it = ports.begin(); it != ports.end(); it++)
     {
-        extArrayValue = FabricCore::RTVal::ConstructExternalArray(client, "Vec3", arraySize, &m_array[0]);
-        binding.setArgValue(name, extArrayValue);
-    }
-    catch (FabricCore::Exception e)
-    {
-        FabricCore::Exception::Throw("extArrayValue not contructed");
-    }
-}
+        DFGWrapper::PortPtr port = *it;
+        if (port->getPortType() == FabricCore::DFGPortType_Out)
+        {
+            std::string name(port->getName());
+            std::string resolvedType(port->getResolvedType());
+            if (name == "toP" && resolvedType == resolvedTypeToMatch)
+            {
+                FabricCore::RTVal rtValVec3Array = getView().getBinding()->getArgValue("toP");
 
-void SOP_FabricDFGDeformer::setPointPositions(OP_Context& context)
-{
-    GA_RWHandleV3 handle(gdp->findAttribute(GA_ATTRIB_POINT, "P"));
-    GA_Size nelements = static_cast<GA_Size>(gdp->getNumPoints());
-    handle.setBlock(GA_Offset(), nelements, &m_array[0]);
-    handle.bumpDataId();
+                GA_RWHandleV3 handle(gdp->findAttribute(GA_ATTRIB_POINT, "P"));
+                GA_Offset ptoff;
+                float pos[3];
+                FabricCore::RTVal rtValVec3;
+                std::vector<FabricCore::RTVal> args(2);
+                GA_FOR_ALL_PTOFF(gdp, ptoff)
+                {
+                    rtValVec3 = rtValVec3Array.getArrayElement(ptoff);
+                    args[0] = FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &pos);
+                    args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
+                    rtValVec3.callMethod("", "get", 2, &args[0]);
+
+                    handle.set(ptoff, UT_Vector3(pos[0], pos[1], pos[2]));
+                }
+                handle.bumpDataId();
+            }
+        }
+    }
 }
 
 OP_ERROR SOP_FabricDFGDeformer::cookMySop(OP_Context& context)
@@ -136,18 +181,9 @@ OP_ERROR SOP_FabricDFGDeformer::cookMySop(OP_Context& context)
     try
     {
         fpreal now = context.getTime();
-
         updateGraph(now);
-        setExternalArrayPoint(context, "P");
         executeGraph();
-
-        if (m_array.size() > 0)
-        {
-            for (size_t i = 0; i < 3; i++)
-                std::cout << "EXTERNAL ARRAY VALUE " << i << ": " << m_array[i].x() << std::endl;
-
-            setPointPositions(context);
-        }
+        setPointsPositions(context);
     }
     catch (FabricCore::Exception e)
     {
