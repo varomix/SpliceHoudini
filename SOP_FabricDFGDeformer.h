@@ -23,8 +23,7 @@ protected:
     static void OnUpdateGraphCopyAttributes(OP_Network& node, DFGWrapper::Binding& binding);
 
 private:
-    static FabricCore::RTVal ConstructPositionsRTVal(const GU_Detail& gdpRef, SOP_FabricDFGDeformer& sopDeformerNode);
-    static FabricCore::RTVal ConstructPolygonMeshRTVal(const GU_Detail& gdpRef, SOP_FabricDFGDeformer& sopDeformerNode);
+    static FabricCore::RTVal CreatePolygonMeshRTVal(const GU_Detail& gdpRef, SOP_FabricDFGDeformer& sopDeformerNode);
     void setPointsPositions(OP_Context& context);
 };
 

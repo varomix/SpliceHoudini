@@ -21,7 +21,7 @@ FabricDFGOP<OP>::FabricDFGOP(OP_Network* net, const char* name, OP_Operator* op)
     , m_ui(this, m_view)
 {
     OP::getParm("__portsChanged").getTemplatePtr()->setInvisible(true);
-    // OP::getParm("jsonData").getTemplatePtr()->setInvisible(true);
+    OP::getParm("jsonData").getTemplatePtr()->setInvisible(true);
     OP::getParm("currentFrame").setExpression(0, "$F", CH_OLD_EXPR_LANGUAGE, 0);
     OP::getParm("currentFrame").setLockedFlag(0, 1);
     OP::getParm("currentFrame").getTemplatePtr()->setInvisible(true);

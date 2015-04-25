@@ -12,7 +12,6 @@
 #include <OP/OP_AutoLockInputs.h>
 
 #include <ImathVec.h>
-#include <boost/lexical_cast.hpp>
 
 #define FEC_PROVIDE_STL_BINDINGS
 
@@ -34,38 +33,8 @@ SOP_FabricDFGDeformer::~SOP_FabricDFGDeformer()
 {
 }
 
-FabricCore::RTVal SOP_FabricDFGDeformer::ConstructPositionsRTVal(const GU_Detail& gdpRef,
-                                                                 SOP_FabricDFGDeformer& sopDeformerNode)
-{
-    FabricCore::RTVal positions;
-    FabricCore::Client client = *(sopDeformerNode.getView().getClient());
-
-    GA_ROHandleV3 handle(gdpRef.findAttribute(GA_ATTRIB_POINT, "P"));
-    if (handle.isValid())
-    {
-        size_t bufferSize = static_cast<size_t>(gdpRef.getNumPoints());
-        FabricCore::Client client = *(sopDeformerNode.getView().getClient());
-        positions = FabricCore::RTVal::ConstructFixedArray(client, "Vec3", bufferSize);
-
-        // Fill the RTVal array with P values
-        GA_Offset ptoff;
-        UT_Vector3 val;
-        FabricCore::RTVal rtVec[3];
-        GA_FOR_ALL_PTOFF(&gdpRef, ptoff)
-        {
-            val = handle.get(ptoff);
-            rtVec[0] = FabricCore::RTVal::ConstructFloat32(client, val.x());
-            rtVec[1] = FabricCore::RTVal::ConstructFloat32(client, val.y());
-            rtVec[2] = FabricCore::RTVal::ConstructFloat32(client, val.z());
-            FabricCore::RTVal rtVal = FabricCore::RTVal::Construct(client, "Vec3", 3, &rtVec[0]);
-            positions.setArrayElement(ptoff, rtVal);
-        }
-    }
-    return positions;
-}
-
-FabricCore::RTVal SOP_FabricDFGDeformer::ConstructPolygonMeshRTVal(const GU_Detail& gdpRef,
-                                                                   SOP_FabricDFGDeformer& sopDeformerNode)
+FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail& gdpRef,
+                                                                SOP_FabricDFGDeformer& sopDeformerNode)
 {
     FabricCore::RTVal polygonMesh;
     FabricCore::Client client = *(sopDeformerNode.getView().getClient());
@@ -75,13 +44,12 @@ FabricCore::RTVal SOP_FabricDFGDeformer::ConstructPolygonMeshRTVal(const GU_Deta
     {
         GA_Size nElements = static_cast<GA_Size>(gdpRef.getNumPoints());
         size_t bufferSize = static_cast<size_t>(nElements);
-        std::vector<UT_Vector3F> posBuffer;
-        posBuffer.resize(bufferSize);
+        std::vector<UT_Vector3F> posBuffer(bufferSize);
         handle.getBlock(GA_Offset(), nElements, &posBuffer[0]);
 
         try
         {
-            polygonMesh = FabricCore::RTVal::Construct(client, "PolygonMesh", 0, 0);
+            polygonMesh = FabricCore::RTVal::Create(client, "PolygonMesh", 0, 0);
             std::vector<FabricCore::RTVal> args(2);
             args[0] = FabricCore::RTVal::ConstructExternalArray(client, "Float32", bufferSize * 3, &posBuffer[0]);
             args[1] = FabricCore::RTVal::ConstructUInt32(client, 3);
@@ -90,7 +58,7 @@ FabricCore::RTVal SOP_FabricDFGDeformer::ConstructPolygonMeshRTVal(const GU_Deta
         catch (FabricCore::Exception e)
         {
             FabricCore::Exception::Throw(
-                (std::string("[SOP_FabricDFGDeformer::ConstructPolygonMeshRTVal]: ") + e.getDesc_cstr()).c_str());
+                (std::string("[SOP_FabricDFGDeformer::CreatePolygonMeshRTVal]: ") + e.getDesc_cstr()).c_str());
         }
     }
 
@@ -113,18 +81,9 @@ void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWra
 
             if (resolvedType == "PolygonMesh")
             {
-                FabricCore::RTVal polygonMesh = ConstructPolygonMeshRTVal(gdpRef, sopDeformerNode);
-
-                size_t nbPoints = polygonMesh.callMethod("Size", "pointCount", 0, 0).getUInt32();
-
-                std::cout << "PolygonMesh got: " << nbPoints << " points from Houdini gdp" << std::endl;
-            }
-
-            else if (name == "fromP" && resolvedType == "Vec3[]")
-            {
-                FabricCore::RTVal positions = ConstructPositionsRTVal(gdpRef, sopDeformerNode);
-
-                sopDeformerNode.getView().getBinding()->setArgValue("fromP", positions);
+                FabricCore::RTVal polygonMesh = CreatePolygonMeshRTVal(gdpRef, sopDeformerNode);
+                sopDeformerNode.getView().getBinding()->setArgValue(port->getName(), polygonMesh);
+                break;
             }
         }
     }
@@ -132,11 +91,6 @@ void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWra
 
 void SOP_FabricDFGDeformer::setPointsPositions(OP_Context& context)
 {
-
-    // GA_Size nelements = static_cast<GA_Size>(gdp->getNumPoints());
-    // std::string resolvedTypeToMatch = "Vec3[" + boost::lexical_cast<std::string>(nelements) + "]";
-    std::string resolvedTypeToMatch = "Vec3[]";
-
     DFGWrapper::PortList ports = getView().getBinding()->getExecutable()->getPorts();
     for (DFGWrapper::PortList::const_iterator it = ports.begin(); it != ports.end(); it++)
     {
@@ -145,25 +99,53 @@ void SOP_FabricDFGDeformer::setPointsPositions(OP_Context& context)
         {
             std::string name(port->getName());
             std::string resolvedType(port->getResolvedType());
-            if (name == "toP" && resolvedType == resolvedTypeToMatch)
+            if (resolvedType == "PolygonMesh")
             {
-                FabricCore::RTVal rtValVec3Array = getView().getBinding()->getArgValue("toP");
+                FabricCore::RTVal polygonMesh = getView().getBinding()->getArgValue(port->getName());
+                FabricCore::Client client = *(getView().getClient());
 
-                GA_RWHandleV3 handle(gdp->findAttribute(GA_ATTRIB_POINT, "P"));
-                GA_Offset ptoff;
-                float pos[3];
-                FabricCore::RTVal rtValVec3;
-                std::vector<FabricCore::RTVal> args(2);
-                GA_FOR_ALL_PTOFF(gdp, ptoff)
+                size_t nbPoints = 0;
+                if (polygonMesh.isValid() && !polygonMesh.isNullObject())
                 {
-                    rtValVec3 = rtValVec3Array.getArrayElement(ptoff);
-                    args[0] = FabricCore::RTVal::ConstructExternalArray(*(getView().getClient()), "Float32", 3, &pos);
-                    args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 0 /* offset */);
-                    rtValVec3.callMethod("", "get", 2, &args[0]);
+                    try
+                    {
+                        FabricCore::RTVal rtValPointCount;
+                        rtValPointCount = polygonMesh.callMethod("Size", "pointCount", 0, 0);
+                        nbPoints = rtValPointCount.getUInt32();
+                    }
+                    catch (FabricCore::Exception e)
+                    {
+                        (std::string("[SOP_FabricDFGDeformer::setPointsPositions]: ") + e.getDesc_cstr()).c_str();
+                    }
 
-                    handle.set(ptoff, UT_Vector3(pos[0], pos[1], pos[2]));
+                    size_t inPtsCount = static_cast<size_t>(gdp->getNumPoints());
+                    if (nbPoints != inPtsCount)
+                    {
+                        std::cout << "Point Count Mismatch !" << std::endl;
+                        break;
+                    }
+
+                    std::vector<UT_Vector3F> posBuffer(nbPoints);
+                    try
+                    {
+                        std::vector<FabricCore::RTVal> args(2);
+                        args[0] =
+                            FabricCore::RTVal::ConstructExternalArray(client, "Float32", nbPoints * 3, &posBuffer[0]);
+                        args[1] = FabricCore::RTVal::ConstructUInt32(client, 3); // components
+
+                        polygonMesh.callMethod("", "getPointsAsExternalArray", 2, &args[0]);
+                    }
+                    catch (FabricCore::Exception e)
+                    {
+                        (std::string("[SOP_FabricDFGDeformer::setPointsPositions]: ") + e.getDesc_cstr()).c_str();
+                    }
+
+                    GA_RWHandleV3 handle(gdp->findAttribute(GA_ATTRIB_POINT, "P"));
+                    handle.setBlock(GA_Offset(), gdp->getNumPoints(), &posBuffer[0]);
+                    handle.bumpDataId();
                 }
-                handle.bumpDataId();
+
+                break;
             }
         }
     }

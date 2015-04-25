@@ -33,6 +33,7 @@ FabricDFGView::FabricDFGView(OP_Node* op)
             FabricCore::Client::CreateOptions options;
             memset(&options, 0, sizeof(options));
             options.optimizationType = FabricCore::ClientOptimizationType_Background;
+            options.guarded = 1;
             s_client = FabricCore::Client(&logFunc, NULL, &options);
 
             // Load basic extensions
