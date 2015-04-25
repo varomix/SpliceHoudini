@@ -2,7 +2,7 @@
 #include "MultiParams.h"
 #include "ParameterFactory.h"
 
-#include <OP/OP_Node.h>
+#include <OP/OP_Network.h>
 
 using namespace FabricServices;
 
@@ -19,7 +19,10 @@ void (*FabricDFGView::s_logErrorFunc)(void*, const char*, unsigned int) = NULL;
 
 std::map<unsigned int, FabricDFGView*> FabricDFGView::s_instances;
 
-FabricDFGView::FabricDFGView(OP_Node* op)
+
+void (*FabricDFGView::s_copyAttributesFunc)(OP_Network& node, DFGWrapper::Binding& binding) = 0;
+
+FabricDFGView::FabricDFGView(OP_Network* op)
     : m_op(op)
 {
     m_id = s_maxId++;
@@ -364,8 +367,22 @@ DFGWrapper::PortList FabricDFGView::getPolygonMeshOutputPorts()
     return outPorts;
 }
 
+void FabricDFGView::setCopyAttributesFunc(CopyAttributesFunc func)
+{ 
+    s_copyAttributesFunc = func; 
+}
+
 void FabricDFGView::setInputPortsFromOpNode(const float t)
 {
+    if(s_copyAttributesFunc)
+    {
+        s_copyAttributesFunc(*m_op, m_binding);
+    }
+    else
+    {
+        std::cout << "Copy Attribute Callback is null" << std::endl;
+    }
+
     // Set DFG inputs ports from Houdini inputs multi-parameters
     int num_param_instances = m_op->evalFloat("Float32Ports", 0, t);
     int instance_idx = m_op->getParm("Float32Ports").getMultiStartOffset();

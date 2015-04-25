@@ -25,7 +25,7 @@ OP_Node* SOP_FabricDFG::myConstructor(OP_Network* net, const char* name, OP_Oper
 SOP_FabricDFG::SOP_FabricDFG(OP_Network* net, const char* name, OP_Operator* op)
     : FabricDFGOP<SOP_Node>(net, name, op)
 {
-    s_copyAttributesFunc = SOP_FabricDFG::copyAttributes;
+    getView().setCopyAttributesFunc(SOP_FabricDFG::copyAttributes);
 }
 
 SOP_FabricDFG::~SOP_FabricDFG()

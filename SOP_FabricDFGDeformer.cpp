@@ -26,7 +26,7 @@ SOP_FabricDFGDeformer::SOP_FabricDFGDeformer(OP_Network* net, const char* name, 
     : FabricDFGOP<SOP_Node>(net, name, op)
 {
     mySopFlags.setManagesDataIDs(true);
-    s_copyAttributesFunc = SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes;
+    getView().setCopyAttributesFunc(SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes);
 }
 
 SOP_FabricDFGDeformer::~SOP_FabricDFGDeformer()

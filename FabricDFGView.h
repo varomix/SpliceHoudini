@@ -14,17 +14,19 @@
 #include <map>
 #include <ImathVec.h>
 
-class OP_Node;
+class OP_Network;
 
 namespace OpenSpliceHoudini
 {
+
+typedef void (*CopyAttributesFunc)(OP_Network& node, FabricServices::DFGWrapper::Binding& binding);
 
 /// A Fabric View with access to an Houdini node
 class FabricDFGView : public FabricServices::DFGWrapper::View
 {
 
 public:
-    FabricDFGView(OP_Node* op);
+    FabricDFGView(OP_Network* op);
     ~FabricDFGView();
 
     // instance management
@@ -134,7 +136,6 @@ private:
     FabricServices::DFGWrapper::Binding m_binding;
     static FabricServices::ASTWrapper::KLASTManager* s_manager;
     static FabricServices::Commands::CommandStack s_stack;
-
     unsigned int m_id;
     static unsigned int s_maxId;
     static std::map<unsigned int, FabricDFGView*> s_instances;
@@ -146,11 +147,15 @@ private:
     void setFilePathPortValue(const char* name, const char* val);
     void setVec3PortValue(const char* name, const Imath::Vec3<float>& val);
 
+    static CopyAttributesFunc s_copyAttributesFunc;
+
+
 public:
     // Houdini and DFG bindings
 
     void addParametersFromInputPorts();
     FabricServices::DFGWrapper::PortList getPolygonMeshOutputPorts();
+    static void setCopyAttributesFunc(CopyAttributesFunc func);
     void setInputPortsFromOpNode(const float t);
 
 private:
@@ -158,7 +163,7 @@ private:
     void saveJsonData();
 
     FabricDFGWidgetPtr m_widget;
-    OP_Node* m_op;
+    OP_Network* m_op;
 };
 } // End namespace OpenSpliceHoudini
 

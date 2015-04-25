@@ -10,10 +10,6 @@ namespace OpenSpliceHoudini
 {
 
 template <typename OP>
-void (*FabricDFGOP<OP>::s_copyAttributesFunc)(OP_Network& node, DFGWrapper::Binding& binding) = 0;
-
-
-template <typename OP>
 FabricDFGOP<OP>::FabricDFGOP(OP_Network* net, const char* name, OP_Operator* op)
     : OP(net, name, op)
     , m_graphLoaded(false)
@@ -166,15 +162,6 @@ void FabricDFGOP<OP>::updateGraph(const fpreal t)
     }
 
     getView().setInputPortsFromOpNode(t);
-    if(s_copyAttributesFunc)
-    {
-        DFGWrapper::Binding binding = *(getView().getBinding());
-        s_copyAttributesFunc(*this, binding);
-    }
-    else
-    {
-        std::cout << "Copy Attribute Callback is null" << std::endl;
-    }
 }
 
 template <typename OP>
@@ -190,7 +177,7 @@ void FabricDFGOP<OP>::executeGraph()
     }
 }
 
-// Specializations for Houdini operator using Fabric
+// Specializations for Houdini nodes using Fabric
 
 template class FabricDFGOP<SOP_Node>;
 template class FabricDFGOP<OBJ_Geometry>;
