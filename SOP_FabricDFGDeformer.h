@@ -13,6 +13,7 @@ namespace OpenSpliceHoudini
 class SOP_FabricDFGDeformer : public FabricDFGOP<SOP_Node>
 {
 public:
+    static OP_TemplatePair* buildTemplatePair(OP_TemplatePair* prevstuff);
     static OP_Node* myConstructor(OP_Network*, const char*, OP_Operator*);
 
 protected:
@@ -34,9 +35,9 @@ public:
         : OP_Operator("fabricDFGDeformer",                   // Internal name
                       "Fabric Deformer",                     // UI name
                       SOP_FabricDFGDeformer::myConstructor,  // How to build the SOP
-                      SOP_FabricDFGDeformer::myTemplateList, // My parameters
+                      SOP_FabricDFGDeformer::buildTemplatePair(0), // My parameters
                       1,                                     // Min # of node inputs
-                      1)                                     // Max # of node inputs
+                      4)                                     // Max # of node inputs
     {
     }
 };

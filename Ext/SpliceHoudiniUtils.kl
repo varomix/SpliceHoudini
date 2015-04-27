@@ -1,0 +1,42 @@
+require Geometry;
+
+operator setPointPositionFromHoudiniArrayTask(Index index, Float32 values<>, Size components, io PolygonMesh mesh) {
+  Index offset = index * components;
+  Vec3 pos;
+  pos.x = values[offset++];
+  pos.y = values[offset++];
+  pos.z = values[offset++];
+  mesh.setPointPosition(index, pos);
+}
+
+function PolygonMesh.setPointPositionFromHoudiniArray!(Float32 values<>, Size components) {
+  PolygonMesh foo = this;
+  Size newSize = (values.size() - values.size() % components) / components;
+  if(newSize != this.pointCount()) {
+    this.clear();
+    this.beginStructureChanges();
+    this.createPoints(newSize);
+    this.endStructureChanges();
+  }
+
+  if(this.pointCount() >= PolygonMesh_ExecuteParallel_Count) {
+    setPointPositionFromHoudiniArrayTask<<<this.pointCount()>>>(values, components, foo);
+  } else {
+    for(Size i=0;i<this.pointCount();i++) {
+      setPointPositionFromHoudiniArrayTask(i, values, components, foo);
+    }
+  }
+}
+
+
+operator setVec3FromHoudiniPointArrayTask(Index index, Float32 values<>, io Ref<Vec3Attribute> attr) {
+  Index offset = index * 3;
+  attr.values[index] = Vec3( values[offset], values[offset+1], values[offset+2]);
+}
+
+function PolygonMesh.setVec3FromHoudiniPointArray!(Float32 values<>, String name) {
+  Ref<Vec3Attribute> attr = this.getOrCreateVec3Attribute( name );  
+  setVec3FromHoudiniPointArrayTask<<<this.pointCount()>>>(values, attr);
+  attr.incrementVersion();
+}
+

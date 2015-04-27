@@ -12,10 +12,67 @@
 #include <OP/OP_AutoLockInputs.h>
 
 #include <ImathVec.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 
 #define FEC_PROVIDE_STL_BINDINGS
 
 using namespace OpenSpliceHoudini;
+
+static PRM_Name pointAttributesName("pointAttributes", "Points Attributes");
+static PRM_Template pointAttributesTemplate(PRM_STRING, 1, &pointAttributesName);
+
+namespace
+{
+
+std::vector<std::string> getAttributeNameTokens(SOP_FabricDFGDeformer& sopDeformerNode)
+{
+    std::string paramVal = sopDeformerNode.getStringValue("pointAttributes", 0).toStdString();
+    std::vector<std::string> result;
+    boost::split(result, paramVal, boost::is_any_of(",; "));
+    return result;
+}
+
+void setPolygonMeshVec3Attribute(GA_ROHandleV3& handle,
+                                 GA_Size nbPoints,
+                                 FabricCore::Client& client,
+                                 FabricCore::RTVal& polygonMesh,
+                                 const char* attrName)
+{
+    size_t bufferSize = static_cast<size_t>(nbPoints);
+    std::vector<UT_Vector3F> buffer(bufferSize);
+    handle.getBlock(GA_Offset(), nbPoints, &buffer[0]);
+
+    try
+    {
+        std::vector<FabricCore::RTVal> args(2);
+        args[0] = FabricCore::RTVal::ConstructExternalArray(client, "Float32", bufferSize * 3, &buffer[0]);
+        args[1] = FabricCore::RTVal::ConstructString(client, attrName);
+        polygonMesh.callMethod("", "setVec3FromHoudiniPointArray", 2, &args[0]);
+    }
+    catch (FabricCore::Exception e)
+    {
+        FabricCore::Exception::Throw(
+            (std::string("[SOP_FabricDFGDeformer::CreatePolygonMeshRTVal]: ") + e.getDesc_cstr()).c_str());
+    }
+}
+
+} // end unnamed namespace
+
+OP_TemplatePair* SOP_FabricDFGDeformer::buildTemplatePair(OP_TemplatePair* prevstuff)
+{
+    static PRM_Template* theTemplate = 0;
+    theTemplate = new PRM_Template[2];
+
+    theTemplate[0] = pointAttributesTemplate;
+    theTemplate[1] = PRM_Template();
+
+    OP_TemplatePair* dfg, *geo;
+    dfg = new OP_TemplatePair(myTemplateList, prevstuff);
+    geo = new OP_TemplatePair(theTemplate, dfg);
+
+    return geo;
+}
 
 OP_Node* SOP_FabricDFGDeformer::myConstructor(OP_Network* net, const char* name, OP_Operator* op)
 {
@@ -36,29 +93,50 @@ SOP_FabricDFGDeformer::~SOP_FabricDFGDeformer()
 FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail& gdpRef,
                                                                 SOP_FabricDFGDeformer& sopDeformerNode)
 {
-    FabricCore::RTVal polygonMesh;
     FabricCore::Client client = *(sopDeformerNode.getView().getClient());
+    FabricCore::RTVal polygonMesh = FabricCore::RTVal::Create(client, "PolygonMesh", 0, 0);
 
+    // Setting P attribute is required before adding other point attributes
     GA_ROHandleV3 handle(gdpRef.findAttribute(GA_ATTRIB_POINT, "P"));
-    if (handle.isValid())
-    {
-        GA_Size nElements = static_cast<GA_Size>(gdpRef.getNumPoints());
-        size_t bufferSize = static_cast<size_t>(nElements);
-        std::vector<UT_Vector3F> posBuffer(bufferSize);
-        handle.getBlock(GA_Offset(), nElements, &posBuffer[0]);
+    if (!handle.isValid())
+        return polygonMesh;
 
-        try
+    size_t bufferSize = static_cast<size_t>(gdpRef.getNumPoints());
+    std::vector<UT_Vector3F> posBuffer(bufferSize);
+    handle.getBlock(GA_Offset(), gdpRef.getNumPoints(), &posBuffer[0]);
+
+    try
+    {
+        std::vector<FabricCore::RTVal> args(2);
+        args[0] = FabricCore::RTVal::ConstructExternalArray(client, "Float32", bufferSize * 3, &posBuffer[0]);
+        args[1] = FabricCore::RTVal::ConstructUInt32(client, 3);
+        polygonMesh.callMethod("", "setPointPositionFromHoudiniArray", 2, &args[0]);
+    }
+    catch (FabricCore::Exception e)
+    {
+        FabricCore::Exception::Throw(
+            (std::string("[SOP_FabricDFGDeformer::CreatePolygonMeshRTVal]: ") + e.getDesc_cstr()).c_str());
+    }
+
+    // Get other per-point attributes
+    BOOST_FOREACH (const std::string& attrName, getAttributeNameTokens(sopDeformerNode))
+    {
+        if (attrName == "P")
+            continue;
+
+        GA_ROHandleV3 handle(gdpRef.findAttribute(GA_ATTRIB_POINT, attrName.c_str()));
+        if (handle.isValid())
         {
-            polygonMesh = FabricCore::RTVal::Create(client, "PolygonMesh", 0, 0);
-            std::vector<FabricCore::RTVal> args(2);
-            args[0] = FabricCore::RTVal::ConstructExternalArray(client, "Float32", bufferSize * 3, &posBuffer[0]);
-            args[1] = FabricCore::RTVal::ConstructUInt32(client, 3);
-            polygonMesh.callMethod("", "setPointsFromExternalArray", 2, &args[0]);
-        }
-        catch (FabricCore::Exception e)
-        {
-            FabricCore::Exception::Throw(
-                (std::string("[SOP_FabricDFGDeformer::CreatePolygonMeshRTVal]: ") + e.getDesc_cstr()).c_str());
+            const GA_Attribute* attrib = handle.getAttribute();
+            // Any Houdini attributes of tuple size 3 or 4 will be stored as Vec3Attribute ('homogeneous component' is
+            // discarded for the moment)
+            if (attrib->getTupleSize() == 3 || attrib->getTupleSize() == 4)
+            {
+                if (attrib->getTypeInfo() <= GA_TYPE_NORMAL)
+                {
+                    setPolygonMeshVec3Attribute(handle, gdpRef.getNumPoints(), client, polygonMesh, attrName.c_str());
+                }
+            }
         }
     }
 
@@ -71,9 +149,8 @@ void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWra
     GU_Detail& gdpRef = *(sopDeformerNode.gdp);
 
     DFGWrapper::PortList ports = binding.getExecutable()->getPorts();
-    for (DFGWrapper::PortList::const_iterator it = ports.begin(); it != ports.end(); it++)
+    BOOST_FOREACH (const DFGWrapper::PortPtr& port, ports)
     {
-        DFGWrapper::PortPtr port = *it;
         if (port->getPortType() == FabricCore::DFGPortType_In)
         {
             std::string name(port->getName());
@@ -121,7 +198,8 @@ void SOP_FabricDFGDeformer::setPointsPositions(OP_Context& context)
                     size_t inPtsCount = static_cast<size_t>(gdp->getNumPoints());
                     if (nbPoints != inPtsCount)
                     {
-                        std::cout << "Point Count Mismatch !" << std::endl;
+                        std::cout << "Point Count Mismatch ! gdp is: " << inPtsCount << " and output port '"
+                                  << port->getName() << "' is: " << nbPoints << std::endl;
                         break;
                     }
 

@@ -1,0 +1,12 @@
+require SpliceHoudiniUtils;
+
+operator entry() {
+  PolygonMesh mesh();
+  Float32 values[];
+  values.push(1.0); values.push(2.0); values.push(3.0);
+
+  mesh.setPointPositionFromHoudiniArray(values, 3);
+  mesh.setVec3FromHoudiniPointArray(values, "foo");
+
+  report(mesh);
+}

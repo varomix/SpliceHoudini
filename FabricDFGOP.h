@@ -60,8 +60,9 @@ public:
 
     static PRM_Template myTemplateList[];
 
-protected:
     UT_String getStringValue(const char* name, fpreal t = 0) const;
+    
+protected:
     void setStringValue(const UT_String& value, const char* name, fpreal t = 0);
 
     FabricDFGView& getView()

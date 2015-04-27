@@ -34,7 +34,6 @@ SOP_FabricDFG::~SOP_FabricDFG()
 
 void SOP_FabricDFG::copyAttributes(OP_Network& node, DFGWrapper::Binding& binding)
 {
-    std::cout << " from SOP_FabricDFG!" << std::endl;
 }
 
 OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)

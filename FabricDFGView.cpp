@@ -43,6 +43,7 @@ FabricDFGView::FabricDFGView(OP_Network* op)
             s_client.loadExtension("Math", "", false);
             s_client.loadExtension("Geometry", "", false);
             s_client.loadExtension("FileIO", "", false);
+            // s_client.loadExtension("SpliceHoudiniUtils", "", false);
 
             // create a host for Canvas
             s_host = new DFGWrapper::Host(s_client);
