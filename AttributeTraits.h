@@ -17,8 +17,8 @@ struct HouToFabAttributeTraits
                              FabricCore::RTVal& polygonMesh,
                              const char* attrName)
     {
-    	if (!handle.isValid())
-           return;
+        if (!handle.isValid())
+            return;
 
         size_t bufferSize = static_cast<size_t>(nbPoints);
         std::vector<T> buffer(bufferSize);
@@ -26,7 +26,8 @@ struct HouToFabAttributeTraits
         try
         {
             std::vector<FabricCore::RTVal> args(2);
-            args[0] = FabricCore::RTVal::ConstructExternalArray(client, getKLTypeName(typeInfo), bufferSize, &buffer[0]);
+            args[0] =
+                FabricCore::RTVal::ConstructExternalArray(client, getKLTypeName(typeInfo), bufferSize, &buffer[0]);
             args[1] = FabricCore::RTVal::ConstructString(client, attrName);
             polygonMesh.callMethod("", getFabricMethodName(typeInfo), 2, &args[0]);
         }
@@ -38,12 +39,6 @@ struct HouToFabAttributeTraits
     }
 };
 
-template <typename T>
-const char* HouToFabAttributeTraits<T>::getKLTypeName(GA_TypeInfo typeInfo)
-{
-    return "";
-}
-
 template <>
 const char* HouToFabAttributeTraits<int32>::getKLTypeName(GA_TypeInfo typeInfo)
 {
@@ -51,38 +46,39 @@ const char* HouToFabAttributeTraits<int32>::getKLTypeName(GA_TypeInfo typeInfo)
 }
 
 template <>
+const char* HouToFabAttributeTraits<fpreal32>::getKLTypeName(GA_TypeInfo typeInfo)
+{
+    return "Float32";
+}
+
+template <>
 const char* HouToFabAttributeTraits<UT_Vector3F>::getKLTypeName(GA_TypeInfo typeInfo)
 {
-	const char* result;
-	if(typeInfo == GA_TYPE_COLOR)
-    	result = "Color";
-    else
-    	result = "Vec3";
-    return result;
+    return "Vec3";
 }
 
 template <>
 const char* HouToFabAttributeTraits<UT_Vector4F>::getKLTypeName(GA_TypeInfo typeInfo)
 {
-	const char* result;
-	if(typeInfo == GA_TYPE_COLOR)
-    	result = "Color";
+    const char* result;
+    if (typeInfo == GA_TYPE_COLOR)
+        result = "Color";
     else
-    	result = "Vec4";
+        result = "Vec4";
 
     return result;
-}
-
-template <typename T>
-const char* HouToFabAttributeTraits<T>::getFabricMethodName(GA_TypeInfo typeInfo)
-{
-    return "";
 }
 
 template <>
 const char* HouToFabAttributeTraits<int32>::getFabricMethodName(GA_TypeInfo typeInfo)
 {
     return "setIntegerFromHoudiniPointArray";
+}
+
+template <>
+const char* HouToFabAttributeTraits<fpreal32>::getFabricMethodName(GA_TypeInfo typeInfo)
+{
+    return "setScalarFromHoudiniPointArray";
 }
 
 template <>
@@ -94,12 +90,12 @@ const char* HouToFabAttributeTraits<UT_Vector3F>::getFabricMethodName(GA_TypeInf
 template <>
 const char* HouToFabAttributeTraits<UT_Vector4F>::getFabricMethodName(GA_TypeInfo typeInfo)
 {
-	const char* result;
+    const char* result;
 
-	if(typeInfo == GA_TYPE_COLOR)
-    	result = "setColorFromHoudiniPointArray";
+    if (typeInfo == GA_TYPE_COLOR)
+        result = "setColorFromHoudiniPointArray";
     else
-    	result = "setVec4FromHoudiniPointArray";
+        result = "setVec4FromHoudiniPointArray";
 
     return result;
 }

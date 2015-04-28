@@ -113,6 +113,16 @@ FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail&
                                                                    polygonMesh,
                                                                    attrName.c_str());
             }
+            if (attrib->getStorageClass() == GA_STORECLASS_REAL)
+            {
+                HouToFabAttributeTraits<fpreal32>::setAttribute(GA_ROHandleF(attrib),
+                                                                   attrib->getTypeInfo(),
+                                                                   gdpRef.getNumPoints(),
+                                                                   client,
+                                                                   polygonMesh,
+                                                                   attrName.c_str());
+            }
+
         }
         else if (attrib->getTupleSize() == 3)
         {

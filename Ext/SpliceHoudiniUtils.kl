@@ -34,6 +34,16 @@ function PolygonMesh.setIntegerFromHoudiniPointArray!(Integer values<>, String n
   attr.incrementVersion();
 }
 
+operator setScalarFromHoudiniPointArrayTask(Index index, Scalar values<>, io Ref<ScalarAttribute> attr) {
+  attr.values[index] = values[index];
+}
+
+function PolygonMesh.setScalarFromHoudiniPointArray!(Scalar values<>, String name) {
+  Ref<ScalarAttribute> attr = this.getOrCreateScalarAttribute( name );  
+  setScalarFromHoudiniPointArrayTask<<<this.pointCount()>>>(values, attr);
+  attr.incrementVersion();
+}
+
 operator setVec3FromHoudiniPointArrayTask(Index index, Vec3 values<>, io Ref<Vec3Attribute> attr) {
   attr.values[index] = values[index];
 }
