@@ -1,17 +1,13 @@
 require Geometry;
 
-operator setPointPositionFromHoudiniArrayTask(Index index, Float32 values<>, Size components, io PolygonMesh mesh) {
-  Index offset = index * components;
-  Vec3 pos;
-  pos.x = values[offset++];
-  pos.y = values[offset++];
-  pos.z = values[offset++];
-  mesh.setPointPosition(index, pos);
+
+operator setPointPositionFromHoudiniArrayTask(Index index, Vec3 values<>, io PolygonMesh mesh) {
+  mesh.setPointPosition(index, values[index]);
 }
 
-function PolygonMesh.setPointPositionFromHoudiniArray!(Float32 values<>, Size components) {
+function PolygonMesh.setPointPositionFromHoudiniArray!(Vec3 values<>) {
   PolygonMesh foo = this;
-  Size newSize = (values.size() - values.size() % components) / components;
+  Size newSize = values.size();
   if(newSize != this.pointCount()) {
     this.clear();
     this.beginStructureChanges();
@@ -20,23 +16,50 @@ function PolygonMesh.setPointPositionFromHoudiniArray!(Float32 values<>, Size co
   }
 
   if(this.pointCount() >= PolygonMesh_ExecuteParallel_Count) {
-    setPointPositionFromHoudiniArrayTask<<<this.pointCount()>>>(values, components, foo);
+    setPointPositionFromHoudiniArrayTask<<<this.pointCount()>>>(values, foo);
   } else {
     for(Size i=0;i<this.pointCount();i++) {
-      setPointPositionFromHoudiniArrayTask(i, values, components, foo);
+      setPointPositionFromHoudiniArrayTask(i, values, foo);
     }
   }
 }
 
-
-operator setVec3FromHoudiniPointArrayTask(Index index, Float32 values<>, io Ref<Vec3Attribute> attr) {
-  Index offset = index * 3;
-  attr.values[index] = Vec3( values[offset], values[offset+1], values[offset+2]);
+operator setIntegerFromHoudiniPointArrayTask(Index index, Integer values<>, io Ref<IntegerAttribute> attr) {
+  attr.values[index] = values[index];
 }
 
-function PolygonMesh.setVec3FromHoudiniPointArray!(Float32 values<>, String name) {
+function PolygonMesh.setIntegerFromHoudiniPointArray!(Integer values<>, String name) {
+  Ref<IntegerAttribute> attr = this.getOrCreateAttribute( name, IntegerAttribute );  
+  setIntegerFromHoudiniPointArrayTask<<<this.pointCount()>>>(values, attr);
+  attr.incrementVersion();
+}
+
+operator setVec3FromHoudiniPointArrayTask(Index index, Vec3 values<>, io Ref<Vec3Attribute> attr) {
+  attr.values[index] = values[index];
+}
+
+function PolygonMesh.setVec3FromHoudiniPointArray!(Vec3 values<>, String name) {
   Ref<Vec3Attribute> attr = this.getOrCreateVec3Attribute( name );  
   setVec3FromHoudiniPointArrayTask<<<this.pointCount()>>>(values, attr);
   attr.incrementVersion();
 }
 
+operator setVec4FromHoudiniPointArrayTask(Index index, Vec4 values<>, io Ref<Vec4Attribute> attr) {
+  attr.values[index] = values[index];
+}
+
+function PolygonMesh.setVec4FromHoudiniPointArray!(Vec4 values<>, String name) {
+  Ref<Vec4Attribute> attr = this.getOrCreateVec4Attribute( name );  
+  setVec4FromHoudiniPointArrayTask<<<this.pointCount()>>>(values, attr);
+  attr.incrementVersion();
+}
+
+operator setColorFromHoudiniPointArrayTask(Index index, Color values<>, io Ref<ColorAttribute> attr) {
+  attr.values[index] = values[index];
+}
+
+function PolygonMesh.setColorFromHoudiniPointArray!(Color values<>, String name) {
+  Ref<ColorAttribute> attr = this.getOrCreateColorAttribute( name );  
+  setColorFromHoudiniPointArrayTask<<<this.pointCount()>>>(values, attr);
+  attr.incrementVersion();
+}

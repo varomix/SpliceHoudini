@@ -1,4 +1,5 @@
 #include "SOP_FabricDFGDeformer.h"
+#include "AttributeTraits.h"
 
 #include <GU/GU_Detail.h>
 #include <GEO/GEO_PrimPoly.h>
@@ -31,30 +32,6 @@ std::vector<std::string> getAttributeNameTokens(SOP_FabricDFGDeformer& sopDeform
     std::vector<std::string> result;
     boost::split(result, paramVal, boost::is_any_of(",; "));
     return result;
-}
-
-void setPolygonMeshVec3Attribute(GA_ROHandleV3& handle,
-                                 GA_Size nbPoints,
-                                 FabricCore::Client& client,
-                                 FabricCore::RTVal& polygonMesh,
-                                 const char* attrName)
-{
-    size_t bufferSize = static_cast<size_t>(nbPoints);
-    std::vector<UT_Vector3F> buffer(bufferSize);
-    handle.getBlock(GA_Offset(), nbPoints, &buffer[0]);
-
-    try
-    {
-        std::vector<FabricCore::RTVal> args(2);
-        args[0] = FabricCore::RTVal::ConstructExternalArray(client, "Float32", bufferSize * 3, &buffer[0]);
-        args[1] = FabricCore::RTVal::ConstructString(client, attrName);
-        polygonMesh.callMethod("", "setVec3FromHoudiniPointArray", 2, &args[0]);
-    }
-    catch (FabricCore::Exception e)
-    {
-        FabricCore::Exception::Throw(
-            (std::string("[SOP_FabricDFGDeformer::CreatePolygonMeshRTVal]: ") + e.getDesc_cstr()).c_str());
-    }
 }
 
 } // end unnamed namespace
@@ -107,10 +84,9 @@ FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail&
 
     try
     {
-        std::vector<FabricCore::RTVal> args(2);
-        args[0] = FabricCore::RTVal::ConstructExternalArray(client, "Float32", bufferSize * 3, &posBuffer[0]);
-        args[1] = FabricCore::RTVal::ConstructUInt32(client, 3);
-        polygonMesh.callMethod("", "setPointPositionFromHoudiniArray", 2, &args[0]);
+        std::vector<FabricCore::RTVal> args(1);
+        args[0] = FabricCore::RTVal::ConstructExternalArray(client, "Vec3", bufferSize, &posBuffer[0]);
+        polygonMesh.callMethod("", "setPointPositionFromHoudiniArray", 1, &args[0]);
     }
     catch (FabricCore::Exception e)
     {
@@ -124,19 +100,37 @@ FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail&
         if (attrName == "P")
             continue;
 
-        GA_ROHandleV3 handle(gdpRef.findAttribute(GA_ATTRIB_POINT, attrName.c_str()));
-        if (handle.isValid())
+        const GA_Attribute* attrib = gdpRef.findAttribute(GA_ATTRIB_POINT, attrName.c_str());
+
+        if (attrib->getTupleSize() == 1)
         {
-            const GA_Attribute* attrib = handle.getAttribute();
-            // Any Houdini attributes of tuple size 3 or 4 will be stored as Vec3Attribute ('homogeneous component' is
-            // discarded for the moment)
-            if (attrib->getTupleSize() == 3 || attrib->getTupleSize() == 4)
+            if (attrib->getStorageClass() == GA_STORECLASS_INT)
             {
-                if (attrib->getTypeInfo() <= GA_TYPE_NORMAL)
-                {
-                    setPolygonMeshVec3Attribute(handle, gdpRef.getNumPoints(), client, polygonMesh, attrName.c_str());
-                }
+                HouToFabAttributeTraits<int32>::setAttribute(GA_ROHandleI(attrib),
+                                                                   attrib->getTypeInfo(),
+                                                                   gdpRef.getNumPoints(),
+                                                                   client,
+                                                                   polygonMesh,
+                                                                   attrName.c_str());
             }
+        }
+        else if (attrib->getTupleSize() == 3)
+        {
+            HouToFabAttributeTraits<UT_Vector3F>::setAttribute(GA_ROHandleV3(attrib),
+                                                               attrib->getTypeInfo(),
+                                                               gdpRef.getNumPoints(),
+                                                               client,
+                                                               polygonMesh,
+                                                               attrName.c_str());
+        }
+        else if (attrib->getTupleSize() == 4)
+        {
+            HouToFabAttributeTraits<UT_Vector4F>::setAttribute(GA_ROHandleV4(attrib),
+                                                               attrib->getTypeInfo(),
+                                                               gdpRef.getNumPoints(),
+                                                               client,
+                                                               polygonMesh,
+                                                               attrName.c_str());
         }
     }
 
