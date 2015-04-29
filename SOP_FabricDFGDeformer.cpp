@@ -101,28 +101,29 @@ FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail&
             continue;
 
         const GA_Attribute* attrib = gdpRef.findAttribute(GA_ATTRIB_POINT, attrName.c_str());
+        if(attrib == 0)
+            continue;
 
         if (attrib->getTupleSize() == 1)
         {
             if (attrib->getStorageClass() == GA_STORECLASS_INT)
             {
                 HouToFabAttributeTraits<int32>::setAttribute(GA_ROHandleI(attrib),
-                                                                   attrib->getTypeInfo(),
-                                                                   gdpRef.getNumPoints(),
-                                                                   client,
-                                                                   polygonMesh,
-                                                                   attrName.c_str());
+                                                             attrib->getTypeInfo(),
+                                                             gdpRef.getNumPoints(),
+                                                             client,
+                                                             polygonMesh,
+                                                             attrName.c_str());
             }
             if (attrib->getStorageClass() == GA_STORECLASS_REAL)
             {
                 HouToFabAttributeTraits<fpreal32>::setAttribute(GA_ROHandleF(attrib),
-                                                                   attrib->getTypeInfo(),
-                                                                   gdpRef.getNumPoints(),
-                                                                   client,
-                                                                   polygonMesh,
-                                                                   attrName.c_str());
+                                                                attrib->getTypeInfo(),
+                                                                gdpRef.getNumPoints(),
+                                                                client,
+                                                                polygonMesh,
+                                                                attrName.c_str());
             }
-
         }
         else if (attrib->getTupleSize() == 3)
         {
@@ -242,6 +243,12 @@ OP_ERROR SOP_FabricDFGDeformer::cookMySop(OP_Context& context)
     // Duplicate input geometry
     duplicateSource(0, context);
 
+    if (!getView().hasOuputPort())
+    {
+        addWarning(SOP_MESSAGE, "No Canvas output ports, Fabric Graph will no be executed");
+        return error();        
+    }
+
     try
     {
         fpreal now = context.getTime();
@@ -251,7 +258,10 @@ OP_ERROR SOP_FabricDFGDeformer::cookMySop(OP_Context& context)
     }
     catch (FabricCore::Exception e)
     {
-        printf("FabricCore::Exception from SOP_FabricDFGDeformer::cookMySop:\n %s\n", e.getDesc_cstr());
+        std::string msg = "FabricCore::Exception from SOP_FabricDFGDeformer::cookMySop:\n";
+        msg += e.getDesc_cstr();
+        std::cerr << msg << std::endl;
+        addError(SOP_MESSAGE, msg.c_str());
         return error();
     }
 

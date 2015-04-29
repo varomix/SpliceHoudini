@@ -3,6 +3,7 @@
 #include "ParameterFactory.h"
 
 #include <OP/OP_Network.h>
+#include <boost/foreach.hpp>
 
 using namespace FabricServices;
 
@@ -274,6 +275,17 @@ void FabricDFGView::addParametersFromInputPorts()
             }
         }
     }
+}
+
+bool FabricDFGView::hasOuputPort()
+{
+    DFGWrapper::PortList ports = m_binding.getExecutable()->getPorts();
+    BOOST_FOREACH (const DFGWrapper::PortPtr& port, ports)
+    {
+        if (port->getPortType() == FabricCore::DFGPortType_Out)
+            return true;
+    }
+    return false;
 }
 
 void FabricDFGView::dirtyOp(bool saveGraph)

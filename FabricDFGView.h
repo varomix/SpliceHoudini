@@ -64,6 +64,8 @@ public:
         m_widget = widget;
     }
 
+    bool hasOuputPort();
+
 protected:
     // notifications
     // for now we only implement onPortInserted and onPortRemoved
