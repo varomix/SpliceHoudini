@@ -14,13 +14,13 @@ class TestCase( unittest.TestCase ) :
 		geo = generator.geometry()
 
 		npPoints = len(geo.points())
-		self.assertEqual( npPoints, 128 )
+		self.assertEqual( npPoints, 2048 )
 
 
-		deformer = hou.node('/obj/geo1/fabricDFGDeformer2')
+		deformer = hou.node('/obj/geo1/fabricDFGDeformer1')
 		geo = deformer.geometry()
 		pt = geo.points()[0]
-		self.assertAlmostEqual( pt.position()[0], 0.69566559 )
+		self.assertAlmostEqual( pt.position()[0], 0.690127193927 )
 
 
 if __name__ == "__main__":

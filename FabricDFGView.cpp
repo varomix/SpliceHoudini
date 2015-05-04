@@ -220,27 +220,27 @@ void FabricDFGView::onPortRemoved(FabricServices::DFGWrapper::PortPtr port)
 {
     // Using "if not removed" is a workarround as port->getDataType()
     // does not work as expected here for some unknown reasons.
-    bool removed = MultiParams::removeFloatParameterInst(m_op, port->getName());
+    bool removed = MultiParams::removeFloatParameterInst(m_op, port->getEndPointPath());
 
     if (!removed)
     {
-        removed = MultiParams::removeIntParameterInst(m_op, port->getName());
+        removed = MultiParams::removeIntParameterInst(m_op, port->getEndPointPath());
     }
     if (!removed)
     {
-        removed = MultiParams::removeIntParameterInst(m_op, port->getName(), "UInt32");
+        removed = MultiParams::removeIntParameterInst(m_op, port->getEndPointPath(), "UInt32");
     }
     if (!removed)
     {
-        removed = MultiParams::removeStringParameterInst(m_op, port->getName());
+        removed = MultiParams::removeStringParameterInst(m_op, port->getEndPointPath());
     }
     if (!removed)
     {
-        removed = MultiParams::removeStringParameterInst(m_op, port->getName(), "FilePath");
+        removed = MultiParams::removeStringParameterInst(m_op, port->getEndPointPath(), "FilePath");
     }
     if (!removed)
     {
-        removed = MultiParams::removeVec3ParameterInst(m_op, port->getName());
+        removed = MultiParams::removeVec3ParameterInst(m_op, port->getEndPointPath());
     }
 
     if (removed)

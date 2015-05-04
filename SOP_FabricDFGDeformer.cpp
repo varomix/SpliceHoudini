@@ -243,12 +243,6 @@ OP_ERROR SOP_FabricDFGDeformer::cookMySop(OP_Context& context)
     // Duplicate input geometry
     duplicateSource(0, context);
 
-    if (!getView().hasOuputPort())
-    {
-        addWarning(SOP_MESSAGE, "No Canvas output ports, Fabric Graph will no be executed");
-        return error();        
-    }
-
     try
     {
         fpreal now = context.getTime();
@@ -263,6 +257,11 @@ OP_ERROR SOP_FabricDFGDeformer::cookMySop(OP_Context& context)
         std::cerr << msg << std::endl;
         addError(SOP_MESSAGE, msg.c_str());
         return error();
+    }
+
+    if (!getView().hasOuputPort())
+    {
+        addWarning(SOP_MESSAGE, "No Canvas output ports, Fabric Graph will not be executed");
     }
 
     return error();
