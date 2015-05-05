@@ -25,7 +25,7 @@ class OP_FabricDFG : public OP_Operator
 {
 public:
     OP_FabricDFG()
-        : OP_Operator("fabricDFG",                   // Internal name
+        : OP_Operator("fabricGenerator",             // Internal name
                       "Fabric Generator",            // UI name
                       SOP_FabricDFG::myConstructor,  // How to build the SOP
                       SOP_FabricDFG::myTemplateList, // My parameters

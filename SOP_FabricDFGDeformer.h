@@ -32,12 +32,12 @@ class OP_FabricDFGDeformer : public OP_Operator
 {
 public:
     OP_FabricDFGDeformer()
-        : OP_Operator("fabricDFGDeformer",                   // Internal name
-                      "Fabric Deformer",                     // UI name
-                      SOP_FabricDFGDeformer::myConstructor,  // How to build the SOP
+        : OP_Operator("fabricDeformer",                            // Internal name
+                      "Fabric Deformer",                           // UI name
+                      SOP_FabricDFGDeformer::myConstructor,        // How to build the SOP
                       SOP_FabricDFGDeformer::buildTemplatePair(0), // My parameters
-                      1,                                     // Min # of node inputs
-                      4)                                     // Max # of node inputs
+                      1,                                           // Min # of node inputs
+                      4)                                           // Max # of node inputs
     {
     }
 };

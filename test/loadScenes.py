@@ -10,17 +10,17 @@ class TestCase( unittest.TestCase ) :
 	def testLoadDeformedTeapot( self ) :		
 		hou.hipFile.load("./hip/pushedTeapot.hipnc")
 
-		generator = hou.node('/obj/geo1/fabricDFG1')
+		generator = hou.node('/obj/fabricObject1/fabricGenerator1')
 		geo = generator.geometry()
 
 		npPoints = len(geo.points())
-		self.assertEqual( npPoints, 2048 )
+		self.assertEqual( npPoints, 2592 )
 
 
-		deformer = hou.node('/obj/geo1/fabricDFGDeformer1')
+		deformer = hou.node('/obj/fabricObject1/fabricDeformer1')
 		geo = deformer.geometry()
 		pt = geo.points()[0]
-		self.assertAlmostEqual( pt.position()[0], 0.690127193927 )
+		self.assertAlmostEqual( pt.position()[0], 0.597287893295 )
 
 
 if __name__ == "__main__":
