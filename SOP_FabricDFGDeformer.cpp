@@ -101,7 +101,7 @@ FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail&
             continue;
 
         const GA_Attribute* attrib = gdpRef.findAttribute(GA_ATTRIB_POINT, attrName.c_str());
-        if(attrib == 0)
+        if (attrib == 0)
             continue;
 
         if (attrib->getTupleSize() == 1)
@@ -173,63 +173,54 @@ void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWra
 
 void SOP_FabricDFGDeformer::setPointsPositions(OP_Context& context)
 {
-    DFGWrapper::PortList ports = getView().getBinding()->getExecutable()->getPorts();
-    for (DFGWrapper::PortList::const_iterator it = ports.begin(); it != ports.end(); it++)
+
+    FabricServices::DFGWrapper::PortList polyMeshOutputPorts = getView().getPolygonMeshOutputPorts();
+    if (polyMeshOutputPorts.size() > 0)
     {
-        DFGWrapper::PortPtr port = *it;
-        if (port->getPortType() == FabricCore::DFGPortType_Out)
+        DFGWrapper::PortPtr port = polyMeshOutputPorts[0];
+
+        FabricCore::RTVal polygonMesh = getView().getBinding()->getArgValue(port->getName());
+        FabricCore::Client client = *(getView().getClient());
+
+        size_t nbPoints = 0;
+        if (polygonMesh.isValid() && !polygonMesh.isNullObject())
         {
-            std::string name(port->getName());
-            std::string resolvedType(port->getResolvedType());
-            if (resolvedType == "PolygonMesh")
+            try
             {
-                FabricCore::RTVal polygonMesh = getView().getBinding()->getArgValue(port->getName());
-                FabricCore::Client client = *(getView().getClient());
-
-                size_t nbPoints = 0;
-                if (polygonMesh.isValid() && !polygonMesh.isNullObject())
-                {
-                    try
-                    {
-                        FabricCore::RTVal rtValPointCount;
-                        rtValPointCount = polygonMesh.callMethod("Size", "pointCount", 0, 0);
-                        nbPoints = rtValPointCount.getUInt32();
-                    }
-                    catch (FabricCore::Exception e)
-                    {
-                        (std::string("[SOP_FabricDFGDeformer::setPointsPositions]: ") + e.getDesc_cstr()).c_str();
-                    }
-
-                    size_t inPtsCount = static_cast<size_t>(gdp->getNumPoints());
-                    if (nbPoints != inPtsCount)
-                    {
-                        std::cout << "Point Count Mismatch ! gdp is: " << inPtsCount << " and output port '"
-                                  << port->getName() << "' is: " << nbPoints << std::endl;
-                        break;
-                    }
-
-                    std::vector<UT_Vector3F> posBuffer(nbPoints);
-                    try
-                    {
-                        std::vector<FabricCore::RTVal> args(2);
-                        args[0] =
-                            FabricCore::RTVal::ConstructExternalArray(client, "Float32", nbPoints * 3, &posBuffer[0]);
-                        args[1] = FabricCore::RTVal::ConstructUInt32(client, 3); // components
-
-                        polygonMesh.callMethod("", "getPointsAsExternalArray", 2, &args[0]);
-                    }
-                    catch (FabricCore::Exception e)
-                    {
-                        (std::string("[SOP_FabricDFGDeformer::setPointsPositions]: ") + e.getDesc_cstr()).c_str();
-                    }
-
-                    GA_RWHandleV3 handle(gdp->findAttribute(GA_ATTRIB_POINT, "P"));
-                    handle.setBlock(GA_Offset(), gdp->getNumPoints(), &posBuffer[0]);
-                    handle.bumpDataId();
-                }
-
-                break;
+                FabricCore::RTVal rtValPointCount;
+                rtValPointCount = polygonMesh.callMethod("Size", "pointCount", 0, 0);
+                nbPoints = rtValPointCount.getUInt32();
             }
+            catch (FabricCore::Exception e)
+            {
+                (std::string("[SOP_FabricDFGDeformer::setPointsPositions]: ") + e.getDesc_cstr()).c_str();
+            }
+
+            size_t inPtsCount = static_cast<size_t>(gdp->getNumPoints());
+            if (nbPoints != inPtsCount)
+            {
+                std::cout << "Point Count Mismatch ! gdp is: " << inPtsCount << " and output port '" << port->getName()
+                          << "' is: " << nbPoints << std::endl;
+                return;
+            }
+
+            std::vector<UT_Vector3F> posBuffer(nbPoints);
+            try
+            {
+                std::vector<FabricCore::RTVal> args(2);
+                args[0] = FabricCore::RTVal::ConstructExternalArray(client, "Float32", nbPoints * 3, &posBuffer[0]);
+                args[1] = FabricCore::RTVal::ConstructUInt32(client, 3); // components
+
+                polygonMesh.callMethod("", "getPointsAsExternalArray", 2, &args[0]);
+            }
+            catch (FabricCore::Exception e)
+            {
+                (std::string("[SOP_FabricDFGDeformer::setPointsPositions]: ") + e.getDesc_cstr()).c_str();
+            }
+
+            GA_RWHandleV3 handle(gdp->findAttribute(GA_ATTRIB_POINT, "P"));
+            handle.setBlock(GA_Offset(), gdp->getNumPoints(), &posBuffer[0]);
+            handle.bumpDataId();
         }
     }
 }

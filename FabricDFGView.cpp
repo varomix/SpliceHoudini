@@ -370,10 +370,16 @@ DFGWrapper::PortList FabricDFGView::getPolygonMeshOutputPorts()
 {
     DFGWrapper::PortList outPorts;
     DFGWrapper::PortList ports = m_binding.getExecutable()->getPorts();
-    for (DFGWrapper::PortList::const_iterator it = ports.begin(); it != ports.end(); it++)
+
+    BOOST_FOREACH (const DFGWrapper::PortPtr& port, ports)
     {
-        if ((*it)->getPortType() == FabricCore::DFGPortType_Out)
-            outPorts.push_back(*it);
+        if (port->getPortType() == FabricCore::DFGPortType_Out)
+        {
+            if (std::string(port->getResolvedType()) == "PolygonMesh")
+            {
+                outPorts.push_back(port);
+            }
+        }
     }
 
     return outPorts;

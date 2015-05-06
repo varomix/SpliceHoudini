@@ -12,6 +12,7 @@
 #include <GEO/GEO_PolyCounts.h>
 
 #include <ImathVec.h>
+#include <boost/foreach.hpp>
 
 #define FEC_PROVIDE_STL_BINDINGS
 
@@ -55,9 +56,9 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
         gdp->clearAndDestroy();
 
         FabricServices::DFGWrapper::PortList polyMeshOutputPorts = getView().getPolygonMeshOutputPorts();
-        if (polyMeshOutputPorts.size() > 0)
+        BOOST_FOREACH (const DFGWrapper::PortPtr& port, polyMeshOutputPorts)
         {
-            FabricCore::RTVal rtMesh = getView().getBinding()->getArgValue(polyMeshOutputPorts[0]->getName());
+            FabricCore::RTVal rtMesh = getView().getBinding()->getArgValue(port->getName());
 
             size_t nbPoints = 0;
             size_t nbPolygons = 0;
@@ -70,14 +71,16 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
 
                 if (nbPoints == 0 || nbPolygons == 0 || nbSamples == 0)
                 {
-                    return error();
+                    continue;
+                    // return error();
                 }
 
-                std::vector<Imath::Vec3<float> > positions(nbPoints);
+                std::vector<UT_Vector3F> posBuffer(nbPoints);
+
                 {
                     std::vector<FabricCore::RTVal> args(2);
                     args[0] = FabricCore::RTVal::ConstructExternalArray(
-                        *(getView().getClient()), "Float32", positions.size() * 3, &positions[0]);
+                        *(getView().getClient()), "Float32", posBuffer.size() * 3, &posBuffer[0]);
                     args[1] = FabricCore::RTVal::ConstructUInt32(*(getView().getClient()), 3); // components
 
                     try
@@ -109,29 +112,18 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
                     }
                 }
 
-                // Create points
                 GA_Offset ptoff = gdp->appendPointBlock(nbPoints);
+                GA_RWHandleV3 handle(gdp->findAttribute(GA_ATTRIB_POINT, "P"));
+                handle.setBlock(ptoff, nbPoints, &posBuffer[0]);
 
-                // Set points positions
-                size_t i = 0;
-                GA_FOR_ALL_PTOFF(gdp, ptoff)
-                {
-                    UT_Vector3 p(positions[i].x, positions[i].y, positions[i].z);
-                    gdp->setPos3(ptoff, p);
-                    ++i;
-                }
-
-                // Build polygons using buildBlock function
-                exint startpoint = 0;
-                exint nfaces = static_cast<exint>(faceCounts.size());
+                // Build polygons
                 GEO_PolyCounts polyCounts;
-
-                for (exint i = 0; i < nfaces; ++i)
+                for (size_t i = 0; i < faceCounts.size(); ++i)
                 {
                     polyCounts.append(faceCounts[i]);
                 }
 
-                GU_PrimPoly::buildBlock(gdp, GA_Offset(startpoint), nbPoints, polyCounts, &elementsIndices[0]);
+                GU_PrimPoly::buildBlock(gdp, ptoff, nbPoints, polyCounts, &elementsIndices[0]);
 
                 select(GU_SPrimitive);
             }
