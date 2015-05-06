@@ -174,7 +174,7 @@ void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWra
 void SOP_FabricDFGDeformer::setPointsPositions(OP_Context& context)
 {
 
-    FabricServices::DFGWrapper::PortList polyMeshOutputPorts = getView().getPolygonMeshOutputPorts();
+    const FabricServices::DFGWrapper::PortList polyMeshOutputPorts = getView().getPolygonMeshOutputPorts();
     if (polyMeshOutputPorts.size() > 0)
     {
         DFGWrapper::PortPtr port = polyMeshOutputPorts[0];

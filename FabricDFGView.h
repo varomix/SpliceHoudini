@@ -29,25 +29,20 @@ public:
     FabricDFGView(OP_Network* op);
     ~FabricDFGView();
 
-    // instance management
-    // right now there are no locks in place,
-    // assuming that the DCC will only access
-    // these things from the main thread.
     unsigned int getId();
     static FabricDFGView* getFromId(unsigned int id);
 
-    // accessors
     static FabricCore::Client* getClient();
     static FabricServices::DFGWrapper::Host* getHost();
     FabricServices::DFGWrapper::Binding* getBinding();
     static FabricServices::ASTWrapper::KLASTManager* getManager();
     static FabricServices::Commands::CommandStack* getStack();
 
-    // persistence
+    /// persistence
     std::string getJSON();
     void createBindingFromJSON(const std::string& json);
 
-    // logging.
+    /// logging.
     static void setLogFunc(void (*in_logFunc)(void*, const char*, unsigned int));
     static void logErrorFunc(void* userData, const char* message, unsigned int length);
 
@@ -67,8 +62,8 @@ public:
     bool hasOuputPort();
 
 protected:
-    // notifications
-    // for now we only implement onPortInserted and onPortRemoved
+    /*! \name Notifications
+    */
     virtual void onNotification(char const* json)
     {
     }
@@ -90,9 +85,8 @@ protected:
     virtual void onEndPointsConnected(FabricServices::DFGWrapper::EndPointPtr src,
                                       FabricServices::DFGWrapper::EndPointPtr dst);
     virtual void onEndPointsDisconnected(FabricServices::DFGWrapper::EndPointPtr src,
-                                         FabricServices::DFGWrapper::EndPointPtr dst)
-    {
-    }
+                                         FabricServices::DFGWrapper::EndPointPtr dst);
+    
     virtual void onNodeMetadataChanged(FabricServices::DFGWrapper::NodePtr node, const char* key, const char* metadata)
     {
     }
@@ -147,7 +141,7 @@ private:
 
     static FabricCore::Client s_client;
     static FabricServices::DFGWrapper::Host* s_host;
-    FabricServices::DFGWrapper::Binding m_binding;
+    mutable FabricServices::DFGWrapper::Binding m_binding;
     static FabricServices::ASTWrapper::KLASTManager* s_manager;
     static FabricServices::Commands::CommandStack s_stack;
     unsigned int m_id;
@@ -164,10 +158,9 @@ private:
     static CopyAttributesFunc s_copyAttributesFunc;
 
 public:
-    // Houdini and DFG bindings
-
+    /// Houdini and DFG bindings
     void addParametersFromInputPorts();
-    FabricServices::DFGWrapper::PortList getPolygonMeshOutputPorts();
+    const FabricServices::DFGWrapper::PortList getPolygonMeshOutputPorts() const;
     static void setCopyAttributesFunc(CopyAttributesFunc func);
     void setInputPortsFromOpNode(const float t);
 

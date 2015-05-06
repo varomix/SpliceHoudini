@@ -176,9 +176,12 @@ void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPt
 
     case FabricCore::DFGPortType_In:
     {
+
         ParameterFactory::CreateParameterFunc addParam = ParameterFactory::Get(portResolvedType);
         if (addParam)
         {
+            // remove previous multi-parm instance using this name.
+            MultiParams::removeInstance(m_op, port->getName());
             addParam(m_op, port->getName());
         }
         else
@@ -218,37 +221,18 @@ void FabricDFGView::onPortRenamed(FabricServices::DFGWrapper::PortPtr port, cons
 
 void FabricDFGView::onPortRemoved(FabricServices::DFGWrapper::PortPtr port)
 {
-    // Using "if not removed" is a workarround as port->getDataType()
-    // does not work as expected here for some unknown reasons.
-    bool removed = MultiParams::removeFloatParameterInst(m_op, port->getEndPointPath());
-
-    if (!removed)
-    {
-        removed = MultiParams::removeIntParameterInst(m_op, port->getEndPointPath());
-    }
-    if (!removed)
-    {
-        removed = MultiParams::removeIntParameterInst(m_op, port->getEndPointPath(), "UInt32");
-    }
-    if (!removed)
-    {
-        removed = MultiParams::removeStringParameterInst(m_op, port->getEndPointPath());
-    }
-    if (!removed)
-    {
-        removed = MultiParams::removeStringParameterInst(m_op, port->getEndPointPath(), "FilePath");
-    }
-    if (!removed)
-    {
-        removed = MultiParams::removeVec3ParameterInst(m_op, port->getEndPointPath());
-    }
-
-    if (removed)
+    if (MultiParams::removeInstance(m_op, port->getEndPointPath()))
         saveJsonData();
 }
 
 void FabricDFGView::onEndPointsConnected(FabricServices::DFGWrapper::EndPointPtr src,
                                          FabricServices::DFGWrapper::EndPointPtr dst)
+{
+    dirtyOp(true);
+}
+
+void FabricDFGView::onEndPointsDisconnected(FabricServices::DFGWrapper::EndPointPtr src,
+                                            FabricServices::DFGWrapper::EndPointPtr dst)
 {
     dirtyOp(true);
 }
@@ -366,7 +350,7 @@ void FabricDFGView::setVec3PortValue(const char* name, const Imath::Vec3<float>&
     }
 }
 
-DFGWrapper::PortList FabricDFGView::getPolygonMeshOutputPorts()
+const DFGWrapper::PortList FabricDFGView::getPolygonMeshOutputPorts() const
 {
     DFGWrapper::PortList outPorts;
     DFGWrapper::PortList ports = m_binding.getExecutable()->getPorts();

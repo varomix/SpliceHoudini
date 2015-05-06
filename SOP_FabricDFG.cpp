@@ -55,7 +55,7 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
         
         gdp->clearAndDestroy();
 
-        FabricServices::DFGWrapper::PortList polyMeshOutputPorts = getView().getPolygonMeshOutputPorts();
+        const FabricServices::DFGWrapper::PortList polyMeshOutputPorts = getView().getPolygonMeshOutputPorts();
         BOOST_FOREACH (const DFGWrapper::PortPtr& port, polyMeshOutputPorts)
         {
             FabricCore::RTVal rtMesh = getView().getBinding()->getArgValue(port->getName());
@@ -72,7 +72,6 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
                 if (nbPoints == 0 || nbPolygons == 0 || nbSamples == 0)
                 {
                     continue;
-                    // return error();
                 }
 
                 std::vector<UT_Vector3F> posBuffer(nbPoints);

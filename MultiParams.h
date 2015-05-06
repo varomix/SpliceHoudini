@@ -52,15 +52,12 @@ public:
         return false;
     }
 
-    static void clear(OP_Parameters* op);
-
     static void addFloatParameterInst(OP_Parameters* op, const std::string& name, float val);
     static void addFloat32Parameter(OP_Parameters* op, const std::string& name)
     {
         addFloatParameterInst(op, name, 1.0);
     }
 
-    static bool removeFloatParameterInst(OP_Parameters* op, const std::string& name);
     static const UT_String getParameterInstFloatName(OP_Parameters* op, int instance_idx);
     static float getParameterInstFloatValue(OP_Parameters* op, int instance_idx, fpreal t = 0);
 
@@ -91,8 +88,6 @@ public:
         addIntParameterInst(op, name, 0, "Count");
     }
 
-    static bool
-    removeIntParameterInst(OP_Parameters* op, const std::string& name, const std::string& option = "SInt32");
     static const UT_String
     getParameterInstIntName(OP_Parameters* op, int instance_idx, const std::string& option = "SInt32");
     static int
@@ -112,8 +107,6 @@ public:
         addStringParameterInst(op, name, "", "FilePath");
     }
 
-    static bool
-    removeStringParameterInst(OP_Parameters* op, const std::string& name, const std::string& option = "String");
     static const UT_String
     getParameterInstStringName(OP_Parameters* op, int instance_idx, const std::string& option = "String");
     static const UT_String getParameterInstStringValue(OP_Parameters* op,
@@ -127,7 +120,6 @@ public:
         addVec3ParameterInst(op, name, Imath::Vec3<float>(0));
     }
 
-    static bool removeVec3ParameterInst(OP_Parameters* op, const std::string& name);
     static const UT_String getParameterInstVec3Name(OP_Parameters* op, int instance_idx);
     static Imath::Vec3<float> getParameterInstVec3Value(OP_Parameters* op, int instance_idx, fpreal t = 0);
 
@@ -136,9 +128,13 @@ public:
                                const std::string& oldName,
                                const std::string& newName);
 
+    static bool removeInstance(OP_Parameters* op, const std::string& name);
+
 private:
     static int addInstance(OP_Parameters* op, const std::string& multiParmName, const std::string& name);
     static bool removeInstance(OP_Parameters* op, const std::string& multiParmTypeName, const std::string& name);
+
+
     static PRM_Default portDefaultName;
     static PRM_Range indexRange;
 };

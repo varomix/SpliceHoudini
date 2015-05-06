@@ -81,30 +81,6 @@ BUILD_1_PARAMETER(String, PRM_STRING, 0, 0.0, "");
 BUILD_1_PARAMETER(FilePath, PRM_FILE, 0, 0.0, "");
 BUILD_3_PARAMETERS(Vec3, PRM_FLT, 0, 0.0, "");
 
-// Does not work (crash).
-void MultiParams::clear(OP_Parameters* op)
-{
-    // int numInstances = op->evalFloat("floatPorts", 0, 0);
-    // for (int i = 0; i < numInstances; ++i)
-    // {
-    //     op->removeMultiParmItem("floatPorts", i);
-    // }
-
-    // numInstances = op->evalFloat("intPorts", 0, 0);
-    // for (int i = 0; i < numInstances; ++i)
-    // {
-    //     op->removeMultiParmItem("intPorts", i);
-    // }
-    // op->addOrRemoveMultiparmInstance();
-
-    // numInstances = op->evalFloat("stringPorts", 0, 0);
-    // for (int i = 0; i < numInstances; ++i)
-    // {
-    //     op->removeMultiParmItem("stringPorts", i);
-    // }
-    // op->addOrRemoveMultiparmInstance();
-}
-
 int MultiParams::addInstance(OP_Parameters* op, const std::string& multiParmName, const std::string& name)
 {
     int numInstances = op->evalFloat(multiParmName.c_str(), 0, 0);
@@ -137,6 +113,33 @@ bool MultiParams::removeInstance(OP_Parameters* op, const std::string& multiParm
     return false;
 }
 
+bool MultiParams::removeInstance(OP_Parameters* op, const std::string& name)
+{
+    bool removed = MultiParams::removeInstance(op, "Float32", name);
+
+    if (!removed)
+    {
+        removed = MultiParams::removeInstance(op, "SInt32", name);
+    }
+    if (!removed)
+    {
+        removed = MultiParams::removeInstance(op, "UInt32", name);
+    }
+    if (!removed)
+    {
+        removed = MultiParams::removeInstance(op, "String", name);
+    }
+    if (!removed)
+    {
+        removed = MultiParams::removeInstance(op, "FilePath", name);
+    }
+    if (!removed)
+    {
+        removed = MultiParams::removeInstance(op, "Vec3", name);
+    }
+    return removed;   
+}
+
 void MultiParams::renameInstance(OP_Parameters* op,
                                  const std::string& multiParmTypeName,
                                  const std::string& oldName,
@@ -164,14 +167,9 @@ void MultiParams::renameInstance(OP_Parameters* op,
 void MultiParams::addFloatParameterInst(OP_Parameters* op, const std::string& name, float val)
 {
     std::string multiParmName("Float32Ports");
-    int instance_idx = addInstance(op, multiParmName, name);
+    int instance_idx = MultiParams::addInstance(op, multiParmName, name);
     std::string valueParm = multiParmName.substr(0, multiParmName.length() - 1) + "Val#";
     op->setFloatInst(val, valueParm.c_str(), &instance_idx, 0, 0);
-}
-
-bool MultiParams::removeFloatParameterInst(OP_Parameters* op, const std::string& name)
-{
-    return removeInstance(op, "Float32", name);
 }
 
 const UT_String MultiParams::getParameterInstFloatName(OP_Parameters* op, int instance_idx)
@@ -190,14 +188,9 @@ void MultiParams::addIntParameterInst(OP_Parameters* op, const std::string& name
 {
     std::string multiParmName = option + "Ports";
 
-    int instance_idx = addInstance(op, multiParmName, name);
+    int instance_idx = MultiParams::addInstance(op, multiParmName, name);
     std::string valueParm = multiParmName.substr(0, multiParmName.length() - 1) + "Val#";
     op->setIntInst(val, valueParm.c_str(), &instance_idx, 0, 0);
-}
-
-bool MultiParams::removeIntParameterInst(OP_Parameters* op, const std::string& name, const std::string& option)
-{
-    return removeInstance(op, option, name);
 }
 
 const UT_String MultiParams::getParameterInstIntName(OP_Parameters* op, int instance_idx, const std::string& option)
@@ -206,7 +199,6 @@ const UT_String MultiParams::getParameterInstIntName(OP_Parameters* op, int inst
 
     UT_String name;
     op->evalStringInst(instanceName.c_str(), &instance_idx, name, 0, 0);
-    // op->evalStringInst("SInt32Port#", &instance_idx, name, 0, 0);
     return name;
 }
 
@@ -222,14 +214,9 @@ void MultiParams::addStringParameterInst(OP_Parameters* op,
                                          const std::string& option)
 {
     std::string multiParmName = option + "Ports";
-    int instance_idx = addInstance(op, multiParmName, name);
+    int instance_idx = MultiParams::addInstance(op, multiParmName, name);
     std::string valueParm = multiParmName.substr(0, multiParmName.length() - 1) + "Val#";
     op->setStringInst(UT_String(val), CH_STRING_LITERAL, valueParm.c_str(), &instance_idx, 0, 0);
-}
-
-bool MultiParams::removeStringParameterInst(OP_Parameters* op, const std::string& name, const std::string& option)
-{
-    return removeInstance(op, option, name);
 }
 
 const UT_String MultiParams::getParameterInstStringName(OP_Parameters* op, int instance_idx, const std::string& option)
@@ -253,7 +240,7 @@ MultiParams::getParameterInstStringValue(OP_Parameters* op, int instance_idx, fp
 void MultiParams::addVec3ParameterInst(OP_Parameters* op, const std::string& name, Imath::Vec3<float> val)
 {
     std::string multiParmName("Vec3Ports");
-    int instance_idx = addInstance(op, multiParmName, name);
+    int instance_idx = MultiParams::addInstance(op, multiParmName, name);
     std::string valueParmX = multiParmName.substr(0, multiParmName.length() - 1) + "xVal#";
     std::string valueParmY = multiParmName.substr(0, multiParmName.length() - 1) + "yVal#";
     std::string valueParmZ = multiParmName.substr(0, multiParmName.length() - 1) + "zVal#";
@@ -262,10 +249,6 @@ void MultiParams::addVec3ParameterInst(OP_Parameters* op, const std::string& nam
     op->setFloatInst(val.z, valueParmZ.c_str(), &instance_idx, 2, 0);
 }
 
-bool MultiParams::removeVec3ParameterInst(OP_Parameters* op, const std::string& name)
-{
-    return removeInstance(op, "Vec3", name);
-}
 const UT_String MultiParams::getParameterInstVec3Name(OP_Parameters* op, int instance_idx)
 {
     UT_String name;
