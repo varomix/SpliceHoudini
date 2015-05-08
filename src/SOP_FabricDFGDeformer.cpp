@@ -1,5 +1,5 @@
 #include "SOP_FabricDFGDeformer.h"
-#include "AttributeTraits.h"
+#include "core/AttributeTraits.h"
 
 #include <GU/GU_Detail.h>
 #include <GEO/GEO_PrimPoly.h>

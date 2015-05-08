@@ -3,7 +3,7 @@
 #define __SOP_FABRICSDFG_H__
 
 #include <SOP/SOP_Node.h>
-#include "FabricDFGOP.h"
+#include "core/FabricDFGOP.h"
 
 namespace OpenSpliceHoudini
 {

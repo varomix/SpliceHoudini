@@ -86,7 +86,7 @@ protected:
                                       FabricServices::DFGWrapper::EndPointPtr dst);
     virtual void onEndPointsDisconnected(FabricServices::DFGWrapper::EndPointPtr src,
                                          FabricServices::DFGWrapper::EndPointPtr dst);
-    
+
     virtual void onNodeMetadataChanged(FabricServices::DFGWrapper::NodePtr node, const char* key, const char* metadata)
     {
     }
@@ -161,7 +161,11 @@ public:
     /// Houdini and DFG bindings
     void addParametersFromInputPorts();
     const FabricServices::DFGWrapper::PortList getPolygonMeshOutputPorts() const;
+
+    /// set the function that is setting Canvas input ports using houdini attributes
     static void setCopyAttributesFunc(CopyAttributesFunc func);
+
+    /// Set Canvas input ports using the Houdini node parameters
     void setInputPortsFromOpNode(const float t);
 
 private:

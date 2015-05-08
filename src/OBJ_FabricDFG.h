@@ -3,7 +3,7 @@
 #define __OBJ_FABRICSDFG_H__
 
 #include <OBJ/OBJ_Geometry.h>
-#include "FabricDFGOP.h"
+#include "core/FabricDFGOP.h"
 
 namespace OpenSpliceHoudini
 {

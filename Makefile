@@ -4,17 +4,17 @@ DSONAME = OpenSpliceHoudini.${VERSION}.dylib
 WIDGET := FabricDFGWidget
 
 SOURCES = \
-	plugin.cpp \
-	FabricDFGView.cpp \
-	MultiParams.cpp \
-	FabricDFGOP.cpp \
-	SOP_FabricDFG.cpp \
-	SOP_FabricDFGDeformer.cpp \
-	OBJ_FabricDFG.cpp \
-	${WIDGET}.cpp \
-	moc_${WIDGET}.cpp \
-	CanvasUI.cpp \
-	ParameterFactory.cpp
+	src/core/FabricDFGView.cpp \
+	src/core/MultiParams.cpp \
+	src/core/FabricDFGOP.cpp \
+	src/core/${WIDGET}.cpp \
+	src/core/moc_${WIDGET}.cpp \
+	src/core/CanvasUI.cpp \
+	src/core/ParameterFactory.cpp \
+	src/SOP_FabricDFG.cpp \
+	src/SOP_FabricDFGDeformer.cpp \
+	src/OBJ_FabricDFG.cpp \
+	src/plugin.cpp
 
 FABRIC_PATH = ${FABRIC_DIR}
 INCDIRS = -I${FABRIC_PATH}/include/
@@ -44,8 +44,8 @@ OPTIMIZER = -g
 include ${HFS}/toolkit/makefiles/Makefile.gnu
 
 # A simple Qt's moc preprocessor rule for our DFG widget 
-moc_FabricDFGWidget.cpp: ${WIDGET}.h
-	${QT_MOC} ${WIDGET}.h -o moc_${WIDGET}.cpp
+src/core/moc_FabricDFGWidget.cpp: src/core/${WIDGET}.h
+	${QT_MOC} src/core/${WIDGET}.h -o src/core/moc_${WIDGET}.cpp
 
 clean_all:
-	rm -f $(OBJECTS) $(APPNAME) $(DSONAME) moc_FabricDFGWidget.cpp	
+	rm -f $(OBJECTS) $(APPNAME) $(DSONAME) src/core/moc_FabricDFGWidget.cpp	
