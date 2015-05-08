@@ -19,7 +19,7 @@ class TestCase( unittest.TestCase ) :
 		deformer = hou.node('/obj/fabricObject1/fabricDeformer1')
 		geo = deformer.geometry()
 		pt = geo.points()[0]
-		self.assertAlmostEqual( pt.position()[0], 0.597287893295 )
+		self.assertAlmostEqual( pt.position()[0], 0.550689518451690 )
 
 	def testLoadMultipleMeshes( self ) :		
 		hou.hipFile.load("./hip/multipleMeshOutputPorts.hipnc")

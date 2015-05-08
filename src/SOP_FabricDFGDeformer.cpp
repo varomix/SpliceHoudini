@@ -154,6 +154,7 @@ void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWra
     GU_Detail& gdpRef = *(sopDeformerNode.gdp);
 
     DFGWrapper::PortList ports = binding.getExecutable()->getPorts();
+    // Set first PolygonMesh input port
     BOOST_FOREACH (const DFGWrapper::PortPtr& port, ports)
     {
         if (port->getPortType() == FabricCore::DFGPortType_In)
@@ -164,8 +165,48 @@ void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWra
             if (resolvedType == "PolygonMesh")
             {
                 FabricCore::RTVal polygonMesh = CreatePolygonMeshRTVal(gdpRef, sopDeformerNode);
-                sopDeformerNode.getView().getBinding()->setArgValue(port->getName(), polygonMesh);
+                binding.setArgValue(port->getName(), polygonMesh);
                 break;
+            }
+        }
+    }
+
+    // Set array ports using attributes from second input
+    const GU_Detail* gdp2 = sopDeformerNode.inputGeo(1);
+    if (gdp2)
+    {
+        BOOST_FOREACH (const DFGWrapper::PortPtr& port, ports)
+        {
+            if (port->getPortType() == FabricCore::DFGPortType_In)
+            {
+                std::string name(port->getName());
+                const GA_Attribute* attrib = gdp2->findAttribute(GA_ATTRIB_POINT, name.c_str());
+                if (attrib && attrib->getTupleSize() == 3)
+                {
+                    size_t bufferSize = gdp2->getNumPoints();
+                    Vec3BufferPtr buffer(new Vec3Buffer(bufferSize));
+
+                    sopDeformerNode.m_vec3BufferMap[name] = buffer;
+
+                    GA_ROHandleV3 handle(attrib);
+                    if (!handle.isValid())
+                        continue;
+
+                    handle.getBlock(GA_Offset(), gdp2->getNumPoints(), &(*buffer)[0]);
+
+                    try
+                    {
+                        FabricCore::RTVal extArrayValue;
+                        FabricCore::Client client = *(sopDeformerNode.getView().getClient());
+                        extArrayValue =
+                            FabricCore::RTVal::ConstructExternalArray(client, "Vec3", bufferSize, &(*buffer)[0]);
+                        binding.setArgValue(name.c_str(), extArrayValue);
+                    }
+                    catch (FabricCore::Exception e)
+                    {
+                        FabricCore::Exception::Throw("extArrayValue not contructed");
+                    }
+                }
             }
         }
     }

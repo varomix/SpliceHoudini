@@ -6,6 +6,7 @@
 #include "core/FabricDFGOP.h"
 
 #include <vector>
+#include <map>
 
 namespace OpenSpliceHoudini
 {
@@ -26,6 +27,11 @@ protected:
 private:
     static FabricCore::RTVal CreatePolygonMeshRTVal(const GU_Detail& gdpRef, SOP_FabricDFGDeformer& sopDeformerNode);
     void setPointsPositions(OP_Context& context);
+
+    typedef std::vector<UT_Vector3F> Vec3Buffer;
+    typedef boost::shared_ptr<Vec3Buffer> Vec3BufferPtr;
+    typedef std::map<std::string, Vec3BufferPtr> Vec3BufferMap;
+    Vec3BufferMap m_vec3BufferMap;
 };
 
 class OP_FabricDFGDeformer : public OP_Operator

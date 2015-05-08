@@ -184,12 +184,6 @@ void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPt
             MultiParams::removeInstance(m_op, port->getName());
             addParam(m_op, port->getName());
         }
-        else
-        {
-            std::cout << "FabricDFGView::onPortResolvedTypeChanged: " << port->getName()
-                      << " is a Canvas only input ! Type " << portResolvedType << " not reflected by Houdini"
-                      << std::endl;
-        }
         break;
     }
 
