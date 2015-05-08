@@ -165,6 +165,7 @@ void FabricDFGView::setLogFunc(void (*in_logFunc)(void*, const char*, unsigned i
 
 void FabricDFGView::onPortInserted(FabricServices::DFGWrapper::PortPtr port)
 {
+    dirtyOp(true);
 }
 
 void FabricDFGView::onPortResolvedTypeChanged(FabricServices::DFGWrapper::PortPtr port, const char* resolvedType)

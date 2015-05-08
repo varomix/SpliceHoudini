@@ -13,6 +13,32 @@ namespace OpenSpliceHoudini
 
 class SOP_FabricDFGDeformer : public FabricDFGOP<SOP_Node>
 {
+    template <typename T>
+    class ManagedBuffer
+    {
+        typedef std::vector<T> Buffer;
+        typedef boost::shared_ptr<Buffer> BufferPtr;
+        typedef std::vector<BufferPtr> Buffers;
+
+    public:
+        /// Add new buffer
+        void create(const size_t size)
+        {
+            BufferPtr buffer(new Buffer(size));
+            m_buffers.push_back(buffer);
+        }
+
+        /// Get last created buffer
+        T* get()
+        {
+            BufferPtr ptr = m_buffers.back();
+            return &(*ptr)[0];
+        }
+
+    private:
+        Buffers m_buffers;
+    };
+
 public:
     static OP_TemplatePair* buildTemplatePair(OP_TemplatePair* prevstuff);
     static OP_Node* myConstructor(OP_Network*, const char*, OP_Operator*);
@@ -28,10 +54,18 @@ private:
     static FabricCore::RTVal CreatePolygonMeshRTVal(const GU_Detail& gdpRef, SOP_FabricDFGDeformer& sopDeformerNode);
     void setPointsPositions(OP_Context& context);
 
-    typedef std::vector<UT_Vector3F> Vec3Buffer;
-    typedef boost::shared_ptr<Vec3Buffer> Vec3BufferPtr;
-    typedef std::map<std::string, Vec3BufferPtr> Vec3BufferMap;
-    Vec3BufferMap m_vec3BufferMap;
+    void addIntegerBuffer(const size_t size) { m_integerBuffers.create(size); }
+    int* getIntegerBuffer() { return m_integerBuffers.get(); }
+
+    void addFloatBuffer(const size_t size) { m_floatBuffers.create(size); }
+    float* getFloatBuffer() { return m_floatBuffers.get(); }
+
+    void addVec3Buffer(const size_t size) { m_vec3Buffers.create(size); }
+    UT_Vector3F* getVec3Buffer() { return m_vec3Buffers.get(); }
+
+    ManagedBuffer<int> m_integerBuffers;
+    ManagedBuffer<float> m_floatBuffers;
+    ManagedBuffer<UT_Vector3F> m_vec3Buffers;
 };
 
 class OP_FabricDFGDeformer : public OP_Operator

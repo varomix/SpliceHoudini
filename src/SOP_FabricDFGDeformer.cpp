@@ -26,9 +26,9 @@ static PRM_Template pointAttributesTemplate(PRM_STRING, 1, &pointAttributesName)
 namespace
 {
 
-std::vector<std::string> getAttributeNameTokens(SOP_FabricDFGDeformer& sopDeformerNode)
+std::vector<std::string> getAttributeNameTokens(SOP_FabricDFGDeformer& sop)
 {
-    std::string paramVal = sopDeformerNode.getStringValue("pointAttributes", 0).toStdString();
+    std::string paramVal = sop.getStringValue("pointAttributes", 0).toStdString();
     std::vector<std::string> result;
     boost::split(result, paramVal, boost::is_any_of(",; "));
     return result;
@@ -67,10 +67,9 @@ SOP_FabricDFGDeformer::~SOP_FabricDFGDeformer()
 {
 }
 
-FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail& gdpRef,
-                                                                SOP_FabricDFGDeformer& sopDeformerNode)
+FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail& gdpRef, SOP_FabricDFGDeformer& sop)
 {
-    FabricCore::Client client = *(sopDeformerNode.getView().getClient());
+    FabricCore::Client client = *(sop.getView().getClient());
     FabricCore::RTVal polygonMesh = FabricCore::RTVal::Create(client, "PolygonMesh", 0, 0);
 
     // Setting P attribute is required before adding other point attributes
@@ -95,7 +94,7 @@ FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail&
     }
 
     // Get other per-point attributes
-    BOOST_FOREACH (const std::string& attrName, getAttributeNameTokens(sopDeformerNode))
+    BOOST_FOREACH (const std::string& attrName, getAttributeNameTokens(sop))
     {
         if (attrName == "P")
             continue;
@@ -150,8 +149,8 @@ FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail&
 
 void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWrapper::Binding& binding)
 {
-    SOP_FabricDFGDeformer& sopDeformerNode = static_cast<SOP_FabricDFGDeformer&>(node);
-    GU_Detail& gdpRef = *(sopDeformerNode.gdp);
+    SOP_FabricDFGDeformer& sop = static_cast<SOP_FabricDFGDeformer&>(node);
+    GU_Detail& gdpRef = *(sop.gdp);
 
     DFGWrapper::PortList ports = binding.getExecutable()->getPorts();
     // Set first PolygonMesh input port
@@ -164,7 +163,7 @@ void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWra
 
             if (resolvedType == "PolygonMesh")
             {
-                FabricCore::RTVal polygonMesh = CreatePolygonMeshRTVal(gdpRef, sopDeformerNode);
+                FabricCore::RTVal polygonMesh = CreatePolygonMeshRTVal(gdpRef, sop);
                 binding.setArgValue(port->getName(), polygonMesh);
                 break;
             }
@@ -172,39 +171,82 @@ void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWra
     }
 
     // Set array ports using attributes from second input
-    const GU_Detail* gdp2 = sopDeformerNode.inputGeo(1);
+    const GU_Detail* gdp2 = sop.inputGeo(1);
     if (gdp2)
     {
+        size_t bufferSize = gdp2->getNumPoints();
+
         BOOST_FOREACH (const DFGWrapper::PortPtr& port, ports)
         {
             if (port->getPortType() == FabricCore::DFGPortType_In)
             {
                 std::string name(port->getName());
                 const GA_Attribute* attrib = gdp2->findAttribute(GA_ATTRIB_POINT, name.c_str());
-                if (attrib && attrib->getTupleSize() == 3)
+
+                if (attrib && attrib->getTupleSize() == 1 && attrib->getStorageClass() == GA_STORECLASS_INT)
                 {
-                    size_t bufferSize = gdp2->getNumPoints();
-                    Vec3BufferPtr buffer(new Vec3Buffer(bufferSize));
-
-                    sopDeformerNode.m_vec3BufferMap[name] = buffer;
-
-                    GA_ROHandleV3 handle(attrib);
+                    sop.addIntegerBuffer(bufferSize);
+                    GA_ROHandleI handle(attrib);
                     if (!handle.isValid())
                         continue;
-
-                    handle.getBlock(GA_Offset(), gdp2->getNumPoints(), &(*buffer)[0]);
-
+                    handle.getBlock(GA_Offset(), gdp2->getNumPoints(), sop.getIntegerBuffer());
                     try
                     {
                         FabricCore::RTVal extArrayValue;
-                        FabricCore::Client client = *(sopDeformerNode.getView().getClient());
-                        extArrayValue =
-                            FabricCore::RTVal::ConstructExternalArray(client, "Vec3", bufferSize, &(*buffer)[0]);
+                        FabricCore::Client client = *(sop.getView().getClient());
+
+                        extArrayValue = FabricCore::RTVal::ConstructExternalArray(
+                            client, "SInt32", bufferSize, sop.getIntegerBuffer());
                         binding.setArgValue(name.c_str(), extArrayValue);
                     }
                     catch (FabricCore::Exception e)
                     {
-                        FabricCore::Exception::Throw("extArrayValue not contructed");
+                        FabricCore::Exception::Throw("External Array not contructed");
+                    }
+                }
+                if (attrib && attrib->getTupleSize() == 1 && attrib->getStorageClass() == GA_STORECLASS_REAL)
+                {
+                    sop.addFloatBuffer(bufferSize);
+                    GA_ROHandleF handle(attrib);
+                    if (!handle.isValid())
+                        continue;
+                    handle.getBlock(GA_Offset(), gdp2->getNumPoints(), sop.getFloatBuffer());
+                    try
+                    {
+                        FabricCore::RTVal extArrayValue;
+                        FabricCore::Client client = *(sop.getView().getClient());
+
+                        extArrayValue = FabricCore::RTVal::ConstructExternalArray(
+                            client, "Float32", bufferSize, sop.getFloatBuffer());
+                        binding.setArgValue(name.c_str(), extArrayValue);
+                    }
+                    catch (FabricCore::Exception e)
+                    {
+                        FabricCore::Exception::Throw("External Array not contructed");
+                    }
+                }
+                else if (attrib && attrib->getTupleSize() == 3)
+                {
+                    sop.addVec3Buffer(bufferSize);
+                    GA_ROHandleV3 handle(attrib);
+                    if (!handle.isValid())
+                        continue;
+                    handle.getBlock(GA_Offset(), gdp2->getNumPoints(), sop.getVec3Buffer());
+                    try
+                    {
+                        FabricCore::RTVal extArrayValue;
+                        FabricCore::Client client = *(sop.getView().getClient());
+
+                        extArrayValue = FabricCore::RTVal::ConstructExternalArray(
+                            client,
+                            attrib->getTypeInfo() == GA_TYPE_COLOR ? "Color" : "Vec3",
+                            bufferSize,
+                            sop.getVec3Buffer());
+                        binding.setArgValue(name.c_str(), extArrayValue);
+                    }
+                    catch (FabricCore::Exception e)
+                    {
+                        FabricCore::Exception::Throw("External Array not contructed");
                     }
                 }
             }
