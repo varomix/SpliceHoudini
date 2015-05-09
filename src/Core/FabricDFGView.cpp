@@ -20,8 +20,6 @@ void (*FabricDFGView::s_logErrorFunc)(void*, const char*, unsigned int) = NULL;
 
 std::map<unsigned int, FabricDFGView*> FabricDFGView::s_instances;
 
-void (*FabricDFGView::s_copyAttributesFunc)(OP_Network& node, DFGWrapper::Binding& binding) = 0;
-
 FabricDFGView::FabricDFGView(OP_Network* op)
     : m_op(op)
 {
@@ -364,16 +362,11 @@ const DFGWrapper::PortList FabricDFGView::getPolygonMeshOutputPorts() const
     return outPorts;
 }
 
-void FabricDFGView::setCopyAttributesFunc(CopyAttributesFunc func)
+void FabricDFGView::setInputPortsFromOpNode(const float t, CopyAttributesFunc func)
 {
-    s_copyAttributesFunc = func;
-}
-
-void FabricDFGView::setInputPortsFromOpNode(const float t)
-{
-    if (s_copyAttributesFunc)
+    if (func)
     {
-        s_copyAttributesFunc(*m_op, m_binding);
+        func(*m_op, m_binding);
     }
     else
     {

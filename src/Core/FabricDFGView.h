@@ -155,18 +155,13 @@ private:
     void setFilePathPortValue(const char* name, const char* val);
     void setVec3PortValue(const char* name, const Imath::Vec3<float>& val);
 
-    static CopyAttributesFunc s_copyAttributesFunc;
-
 public:
     /// Houdini and DFG bindings
     void addParametersFromInputPorts();
     const FabricServices::DFGWrapper::PortList getPolygonMeshOutputPorts() const;
 
-    /// set the function that is setting Canvas input ports using houdini attributes
-    static void setCopyAttributesFunc(CopyAttributesFunc func);
-
-    /// Set Canvas input ports using the Houdini node parameters
-    void setInputPortsFromOpNode(const float t);
+    /// Set Canvas input ports using the Houdini node data (params and/or attributes)
+    void setInputPortsFromOpNode(const float t, CopyAttributesFunc func);
 
 private:
     void dirtyOp(bool saveGraph);

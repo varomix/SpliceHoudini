@@ -60,7 +60,6 @@ SOP_FabricDFGDeformer::SOP_FabricDFGDeformer(OP_Network* net, const char* name, 
     : FabricDFGOP<SOP_Node>(net, name, op)
 {
     mySopFlags.setManagesDataIDs(true);
-    getView().setCopyAttributesFunc(SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes);
 }
 
 SOP_FabricDFGDeformer::~SOP_FabricDFGDeformer()
@@ -225,7 +224,7 @@ void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWra
                         FabricCore::Exception::Throw("External Array not contructed");
                     }
                 }
-                else if (attrib && attrib->getTupleSize() == 3)
+                else if (attrib && (attrib->getTupleSize() == 3 || attrib->getTupleSize() == 4))
                 {
                     sop.addVec3Buffer(bufferSize);
                     GA_ROHandleV3 handle(attrib);
@@ -320,7 +319,7 @@ OP_ERROR SOP_FabricDFGDeformer::cookMySop(OP_Context& context)
     try
     {
         fpreal now = context.getTime();
-        updateGraph(now);
+        updateGraph(now, SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes);
         executeGraph();
         setPointsPositions(context);
     }

@@ -70,7 +70,7 @@ protected:
         return m_view;
     }
 
-    void updateGraph(const fpreal t);
+    void updateGraph(const fpreal t, CopyAttributesFunc func=0);
     void executeGraph();
 
     bool m_graphLoaded;

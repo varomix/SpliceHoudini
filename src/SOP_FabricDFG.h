@@ -17,8 +17,6 @@ protected:
     SOP_FabricDFG(OP_Network* net, const char* name, OP_Operator* op);
     virtual ~SOP_FabricDFG();
     virtual OP_ERROR cookMySop(OP_Context& context);
-
-    static void copyAttributes(OP_Network& node, DFGWrapper::Binding& binding);
 };
 
 class OP_FabricDFG : public OP_Operator

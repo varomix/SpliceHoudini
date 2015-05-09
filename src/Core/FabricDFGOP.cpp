@@ -139,7 +139,7 @@ void FabricDFGOP<OP>::setStringValue(const UT_String& value, const char* name, f
 }
 
 template <typename OP>
-void FabricDFGOP<OP>::updateGraph(const fpreal t)
+void FabricDFGOP<OP>::updateGraph(const fpreal t, CopyAttributesFunc func)
 {
     if (!m_graphLoaded)
     {
@@ -152,7 +152,7 @@ void FabricDFGOP<OP>::updateGraph(const fpreal t)
         try
         {
             getView().createBindingFromJSON(jsonData.buffer());
-            getView().setInputPortsFromOpNode(t); // Needed to get a "type-resolved" graph
+            getView().setInputPortsFromOpNode(t, func); // Needed to get a "type-resolved" graph
             getView().setMyGraph();
         }
         catch (FabricCore::Exception e)
@@ -161,7 +161,7 @@ void FabricDFGOP<OP>::updateGraph(const fpreal t)
         }
     }
 
-    getView().setInputPortsFromOpNode(t);
+    getView().setInputPortsFromOpNode(t, func);
 }
 
 template <typename OP>

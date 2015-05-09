@@ -19,7 +19,7 @@ Launch Houdini shell to get the Houdini environment (on Mac, ctrl + space > Houd
 Then run those lines:
 > cd $FABRIC_PARENT_DIR/FabricEngine-2.0.0-beta-Darwin-x86_64
 > source environment.sh
-> export DYLD_LIBRARY_PATH=FABRIC_PARENT_DIR/FabricEngine-2.0.0-beta-Darwin-x86_64/lib
+> export DYLD_LIBRARY_PATH=$FABRIC_PARENT_DIR/FabricEngine-2.0.0-beta-Darwin-x86_64/lib
 
 To build and install plugin:
 make install

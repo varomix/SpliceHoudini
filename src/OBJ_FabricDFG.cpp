@@ -97,7 +97,7 @@ int OBJ_FabricDFG::applyInputIndependentTransform(OP_Context& context, UT_DMatri
     {
         // call OBJ_Geometry::applyInputIndependentTransform() so that we don't
         // lose any information
-        int modified = OBJ_Geometry::applyInputIndependentTransform(context, mat);
+        OBJ_Geometry::applyInputIndependentTransform(context, mat);
 
         fpreal now = context.getTime();
         updateGraph(now);

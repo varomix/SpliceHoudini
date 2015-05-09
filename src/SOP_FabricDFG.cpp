@@ -26,14 +26,9 @@ OP_Node* SOP_FabricDFG::myConstructor(OP_Network* net, const char* name, OP_Oper
 SOP_FabricDFG::SOP_FabricDFG(OP_Network* net, const char* name, OP_Operator* op)
     : FabricDFGOP<SOP_Node>(net, name, op)
 {
-    getView().setCopyAttributesFunc(SOP_FabricDFG::copyAttributes);
 }
 
 SOP_FabricDFG::~SOP_FabricDFG()
-{
-}
-
-void SOP_FabricDFG::copyAttributes(OP_Network& node, DFGWrapper::Binding& binding)
 {
 }
 
@@ -49,6 +44,7 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
 
     try
     {
+
         fpreal now = context.getTime();
         updateGraph(now);
         executeGraph();
