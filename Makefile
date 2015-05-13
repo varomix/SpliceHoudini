@@ -11,9 +11,9 @@ SOURCES = \
 	src/core/moc_${WIDGET}.cpp \
 	src/core/CanvasUI.cpp \
 	src/core/ParameterFactory.cpp \
-	src/SOP_FabricDFG.cpp \
-	src/SOP_FabricDFGDeformer.cpp \
-	src/OBJ_FabricDFG.cpp \
+	src/SOP_FabricGenerator.cpp \
+	src/SOP_FabricDeformer.cpp \
+	src/OBJ_FabricKinematic.cpp \
 	src/plugin.cpp
 
 FABRIC_PATH = ${FABRIC_DIR}

@@ -12,7 +12,7 @@
 namespace OpenSpliceHoudini
 {
 
-class SOP_FabricDFGDeformer : public FabricDFGOP<SOP_Node>
+class SOP_FabricDeformer : public FabricDFGOP<SOP_Node>
 {
     template <typename T>
     class ManagedBuffer
@@ -45,14 +45,14 @@ public:
     static OP_Node* myConstructor(OP_Network*, const char*, OP_Operator*);
 
 protected:
-    SOP_FabricDFGDeformer(OP_Network* net, const char* name, OP_Operator* op);
-    virtual ~SOP_FabricDFGDeformer();
+    SOP_FabricDeformer(OP_Network* net, const char* name, OP_Operator* op);
+    virtual ~SOP_FabricDeformer();
     virtual OP_ERROR cookMySop(OP_Context& context);
 
     static void OnUpdateGraphCopyAttributes(OP_Network& node, DFGWrapper::Binding& binding);
 
 private:
-    static FabricCore::RTVal CreatePolygonMeshRTVal(const GU_Detail& gdpRef, SOP_FabricDFGDeformer& sopDeformerNode);
+    static FabricCore::RTVal CreatePolygonMeshRTVal(const GU_Detail& gdpRef, SOP_FabricDeformer& sopDeformerNode);
     void setPointsPositions(OP_Context& context);
 
     void addIntegerBuffer(const size_t size) { m_integerBuffers.create(size); }
@@ -69,14 +69,14 @@ private:
     ManagedBuffer<UT_Vector3F> m_vec3Buffers;
 };
 
-class OP_FabricDFGDeformer : public OP_Operator
+class OP_SOP_FabricDeformer : public OP_Operator
 {
 public:
-    OP_FabricDFGDeformer()
+    OP_SOP_FabricDeformer()
         : OP_Operator("fabricDeformer",                            // Internal name
                       "Fabric Deformer",                           // UI name
-                      SOP_FabricDFGDeformer::myConstructor,        // How to build the SOP
-                      SOP_FabricDFGDeformer::buildTemplatePair(0), // My parameters
+                      SOP_FabricDeformer::myConstructor,        // How to build the SOP
+                      SOP_FabricDeformer::buildTemplatePair(0), // My parameters
                       1,                                           // Min # of node inputs
                       4)                                           // Max # of node inputs
     {

@@ -82,9 +82,6 @@ int FabricDFGOP<OP>::createGraphCallback(void* data, int index, float time, cons
     {
         // Store preset path
         op->setStringValue(UT_String(buffer.str()), "jsonData");
-        // int val = op->evalInt("__portsChanged", 0, 0);
-        // op->setInt("__portsChanged", 0, 0, (val + 1) % INT_MAX);
-
         try
         {
             op->getView().createBindingFromJSON(buffer.str());
@@ -96,6 +93,7 @@ int FabricDFGOP<OP>::createGraphCallback(void* data, int index, float time, cons
         {
             FabricCore::Exception::Throw(
                 (std::string("[FabricDFGOP<OP>::createGraphCallback]: ") + e.getDesc_cstr()).c_str());
+            return 0; // no need to refresh the UI if we fail
         }
     }
 
@@ -110,6 +108,7 @@ int FabricDFGOP<OP>::openGraphButtonCallback(void* data, int index, float time, 
     return 1;
 }
 
+// If you add a new MultiParams type, you must add it to the OP too !
 template <typename OP>
 PRM_Template FabricDFGOP<OP>::myTemplateList[] = {
     groupTemplate,                          jsonFilePathTemplate,

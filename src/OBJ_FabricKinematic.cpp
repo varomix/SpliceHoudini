@@ -1,6 +1,6 @@
 // Copyright (c) 2015, Guillaume Laforge. All rights reserved.
 
-#include "OBJ_FabricDFG.h"
+#include "OBJ_FabricKinematic.h"
 
 #include <PRM/PRM_Include.h>
 #include <CH/CH_LocalVariable.h>
@@ -16,17 +16,17 @@ using std::cout;
 using std::endl;
 using std::boolalpha;
 
-OP_Node* OBJ_FabricDFG::myConstructor(OP_Network* net, const char* name, OP_Operator* op)
+OP_Node* OBJ_FabricKinematic::myConstructor(OP_Network* net, const char* name, OP_Operator* op)
 {
-    return new OBJ_FabricDFG(net, name, op);
+    return new OBJ_FabricKinematic(net, name, op);
 }
 
-OBJ_FabricDFG::OBJ_FabricDFG(OP_Network* net, const char* name, OP_Operator* op)
+OBJ_FabricKinematic::OBJ_FabricKinematic(OP_Network* net, const char* name, OP_Operator* op)
     : FabricDFGOP<OBJ_Geometry>(net, name, op)
 {
 }
 
-OBJ_FabricDFG::~OBJ_FabricDFG()
+OBJ_FabricKinematic::~OBJ_FabricKinematic()
 {
 }
 
@@ -52,7 +52,7 @@ static void copyParmWithInvisible(PRM_Template& src, PRM_Template& dest)
                     src.getConditionalBasePtr());
 }
 
-OP_TemplatePair* OBJ_FabricDFG::buildTemplatePair(OP_TemplatePair* prevstuff)
+OP_TemplatePair* OBJ_FabricKinematic::buildTemplatePair(OP_TemplatePair* prevstuff)
 {
 
     // The parm templates here are not created as a static list because
@@ -93,7 +93,7 @@ OP_TemplatePair* OBJ_FabricDFG::buildTemplatePair(OP_TemplatePair* prevstuff)
     return geo;
 }
 
-int OBJ_FabricDFG::applyInputIndependentTransform(OP_Context& context, UT_DMatrix4& mat)
+int OBJ_FabricKinematic::applyInputIndependentTransform(OP_Context& context, UT_DMatrix4& mat)
 {
     try
     {
@@ -152,7 +152,7 @@ int OBJ_FabricDFG::applyInputIndependentTransform(OP_Context& context, UT_DMatri
     }
     catch (FabricCore::Exception e)
     {
-        printf("FabricCore::Exception from OBJ_FabricDFG::applyInputIndependentTransform:\n %s\n", e.getDesc_cstr());
+        printf("FabricCore::Exception from OBJ_FabricKinematic::applyInputIndependentTransform:\n %s\n", e.getDesc_cstr());
         return 0;
     }
 }

@@ -1,6 +1,6 @@
 // Copyright (c) 2015, Guillaume Laforge. All rights reserved.
 
-#include "SOP_FabricDFG.h"
+#include "SOP_FabricGenerator.h"
 
 #include <GU/GU_Detail.h>
 #include <GEO/GEO_PrimPoly.h>
@@ -20,21 +20,21 @@
 
 using namespace OpenSpliceHoudini;
 
-OP_Node* SOP_FabricDFG::myConstructor(OP_Network* net, const char* name, OP_Operator* op)
+OP_Node* SOP_FabricGenerator::myConstructor(OP_Network* net, const char* name, OP_Operator* op)
 {
-    return new SOP_FabricDFG(net, name, op);
+    return new SOP_FabricGenerator(net, name, op);
 }
 
-SOP_FabricDFG::SOP_FabricDFG(OP_Network* net, const char* name, OP_Operator* op)
+SOP_FabricGenerator::SOP_FabricGenerator(OP_Network* net, const char* name, OP_Operator* op)
     : FabricDFGOP<SOP_Node>(net, name, op)
 {
 }
 
-SOP_FabricDFG::~SOP_FabricDFG()
+SOP_FabricGenerator::~SOP_FabricGenerator()
 {
 }
 
-OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
+OP_ERROR SOP_FabricGenerator::cookMySop(OP_Context& context)
 {
 
     // Start the interrupt server
@@ -128,7 +128,7 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
     }
     catch (FabricCore::Exception e)
     {
-        printf("FabricCore::Exception from SOP_FabricDFG::cookMySop:\n %s\n", e.getDesc_cstr());
+        printf("FabricCore::Exception from SOP_FabricGenerator::cookMySop:\n %s\n", e.getDesc_cstr());
         return error();
     }
 

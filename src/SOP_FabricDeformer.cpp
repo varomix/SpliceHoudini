@@ -1,6 +1,6 @@
 // Copyright (c) 2015, Guillaume Laforge. All rights reserved.
 
-#include "SOP_FabricDFGDeformer.h"
+#include "SOP_FabricDeformer.h"
 #include "core/AttributeTraits.h"
 
 #include <GU/GU_Detail.h>
@@ -28,7 +28,7 @@ static PRM_Template pointAttributesTemplate(PRM_STRING, 1, &pointAttributesName)
 namespace
 {
 
-std::vector<std::string> getAttributeNameTokens(SOP_FabricDFGDeformer& sop)
+std::vector<std::string> getAttributeNameTokens(SOP_FabricDeformer& sop)
 {
     std::string paramVal = sop.getStringValue("pointAttributes", 0).toStdString();
     std::vector<std::string> result;
@@ -38,7 +38,7 @@ std::vector<std::string> getAttributeNameTokens(SOP_FabricDFGDeformer& sop)
 
 } // end unnamed namespace
 
-OP_TemplatePair* SOP_FabricDFGDeformer::buildTemplatePair(OP_TemplatePair* prevstuff)
+OP_TemplatePair* SOP_FabricDeformer::buildTemplatePair(OP_TemplatePair* prevstuff)
 {
     static PRM_Template* theTemplate = 0;
     theTemplate = new PRM_Template[2];
@@ -53,22 +53,22 @@ OP_TemplatePair* SOP_FabricDFGDeformer::buildTemplatePair(OP_TemplatePair* prevs
     return geo;
 }
 
-OP_Node* SOP_FabricDFGDeformer::myConstructor(OP_Network* net, const char* name, OP_Operator* op)
+OP_Node* SOP_FabricDeformer::myConstructor(OP_Network* net, const char* name, OP_Operator* op)
 {
-    return new SOP_FabricDFGDeformer(net, name, op);
+    return new SOP_FabricDeformer(net, name, op);
 }
 
-SOP_FabricDFGDeformer::SOP_FabricDFGDeformer(OP_Network* net, const char* name, OP_Operator* op)
+SOP_FabricDeformer::SOP_FabricDeformer(OP_Network* net, const char* name, OP_Operator* op)
     : FabricDFGOP<SOP_Node>(net, name, op)
 {
     mySopFlags.setManagesDataIDs(true);
 }
 
-SOP_FabricDFGDeformer::~SOP_FabricDFGDeformer()
+SOP_FabricDeformer::~SOP_FabricDeformer()
 {
 }
 
-FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail& gdpRef, SOP_FabricDFGDeformer& sop)
+FabricCore::RTVal SOP_FabricDeformer::CreatePolygonMeshRTVal(const GU_Detail& gdpRef, SOP_FabricDeformer& sop)
 {
     FabricCore::Client client = *(sop.getView().getClient());
     FabricCore::RTVal polygonMesh = FabricCore::RTVal::Create(client, "PolygonMesh", 0, 0);
@@ -91,7 +91,7 @@ FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail&
     catch (FabricCore::Exception e)
     {
         FabricCore::Exception::Throw(
-            (std::string("[SOP_FabricDFGDeformer::CreatePolygonMeshRTVal]: ") + e.getDesc_cstr()).c_str());
+            (std::string("[SOP_FabricDeformer::CreatePolygonMeshRTVal]: ") + e.getDesc_cstr()).c_str());
     }
 
     // Get other per-point attributes
@@ -148,9 +148,9 @@ FabricCore::RTVal SOP_FabricDFGDeformer::CreatePolygonMeshRTVal(const GU_Detail&
     return polygonMesh;
 }
 
-void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWrapper::Binding& binding)
+void SOP_FabricDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWrapper::Binding& binding)
 {
-    SOP_FabricDFGDeformer& sop = static_cast<SOP_FabricDFGDeformer&>(node);
+    SOP_FabricDeformer& sop = static_cast<SOP_FabricDeformer&>(node);
     GU_Detail& gdpRef = *(sop.gdp);
 
     DFGWrapper::PortList ports = binding.getExecutable()->getPorts();
@@ -255,7 +255,7 @@ void SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes(OP_Network& node, DFGWra
     }
 }
 
-void SOP_FabricDFGDeformer::setPointsPositions(OP_Context& context)
+void SOP_FabricDeformer::setPointsPositions(OP_Context& context)
 {
 
     const FabricServices::DFGWrapper::PortList polyMeshOutputPorts = getView().getPolygonMeshOutputPorts();
@@ -277,7 +277,7 @@ void SOP_FabricDFGDeformer::setPointsPositions(OP_Context& context)
             }
             catch (FabricCore::Exception e)
             {
-                (std::string("[SOP_FabricDFGDeformer::setPointsPositions]: ") + e.getDesc_cstr()).c_str();
+                (std::string("[SOP_FabricDeformer::setPointsPositions]: ") + e.getDesc_cstr()).c_str();
             }
 
             size_t inPtsCount = static_cast<size_t>(gdp->getNumPoints());
@@ -299,7 +299,7 @@ void SOP_FabricDFGDeformer::setPointsPositions(OP_Context& context)
             }
             catch (FabricCore::Exception e)
             {
-                (std::string("[SOP_FabricDFGDeformer::setPointsPositions]: ") + e.getDesc_cstr()).c_str();
+                (std::string("[SOP_FabricDeformer::setPointsPositions]: ") + e.getDesc_cstr()).c_str();
             }
 
             GA_RWHandleV3 handle(gdp->findAttribute(GA_ATTRIB_POINT, "P"));
@@ -309,7 +309,7 @@ void SOP_FabricDFGDeformer::setPointsPositions(OP_Context& context)
     }
 }
 
-OP_ERROR SOP_FabricDFGDeformer::cookMySop(OP_Context& context)
+OP_ERROR SOP_FabricDeformer::cookMySop(OP_Context& context)
 {
     OP_AutoLockInputs inputs(this);
     if (inputs.lock(context) >= UT_ERROR_ABORT)
@@ -321,13 +321,13 @@ OP_ERROR SOP_FabricDFGDeformer::cookMySop(OP_Context& context)
     try
     {
         fpreal now = context.getTime();
-        updateGraph(now, SOP_FabricDFGDeformer::OnUpdateGraphCopyAttributes);
+        updateGraph(now, SOP_FabricDeformer::OnUpdateGraphCopyAttributes);
         executeGraph();
         setPointsPositions(context);
     }
     catch (FabricCore::Exception e)
     {
-        std::string msg = "FabricCore::Exception from SOP_FabricDFGDeformer::cookMySop:\n";
+        std::string msg = "FabricCore::Exception from SOP_FabricDeformer::cookMySop:\n";
         msg += e.getDesc_cstr();
         std::cerr << msg << std::endl;
         addError(SOP_MESSAGE, msg.c_str());

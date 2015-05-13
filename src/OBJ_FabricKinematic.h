@@ -9,29 +9,32 @@
 namespace OpenSpliceHoudini
 {
 
-class OBJ_FabricDFG : public FabricDFGOP<OBJ_Geometry>
+/// An simple example of Fabric Canvas integration on Houdini Objects
+/// It will set the object transform if the Canvas graph got output ports
+/// of type Vec3 called "t", "r" or "s" to set translation, rotation and scale  
+class OBJ_FabricKinematic : public FabricDFGOP<OBJ_Geometry>
 {
 public:
     static OP_Node* myConstructor(OP_Network*, const char*, OP_Operator*);
     static OP_TemplatePair* buildTemplatePair(OP_TemplatePair* prevstuff);
 
 protected:
-    OBJ_FabricDFG(OP_Network* net, const char* name, OP_Operator* op);
-    virtual ~OBJ_FabricDFG();
+    OBJ_FabricKinematic(OP_Network* net, const char* name, OP_Operator* op);
+    virtual ~OBJ_FabricKinematic();
     // // Performs the calculation of the local and the world transformation.
     // virtual OP_ERROR cookMyObj(OP_Context& context);
 
     virtual int applyInputIndependentTransform(OP_Context& context, UT_DMatrix4& mat);
 };
 
-class OP_FabricDFG_OBJ : public OP_Operator
+class OP_OBJ_FabricKinematic : public OP_Operator
 {
 public:
-    OP_FabricDFG_OBJ()
+    OP_OBJ_FabricKinematic()
         : OP_Operator("fabricObject",                      // Internal name
                       "Fabric Object",                     // UI name
-                      OBJ_FabricDFG::myConstructor,        // How to build the SOP
-                      OBJ_FabricDFG::buildTemplatePair(0), // My parameters
+                      OBJ_FabricKinematic::myConstructor,        // How to build the SOP
+                      OBJ_FabricKinematic::buildTemplatePair(0), // My parameters
                       0,                                   // Min # of node inputs
                       1,                                   // Max # of node inputs
                       0)                                   // Local variables

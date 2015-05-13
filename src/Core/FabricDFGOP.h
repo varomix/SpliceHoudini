@@ -70,13 +70,14 @@ protected:
         return m_view;
     }
 
+    /// Setup the Canvas graph and set its ports values from Houdini data
     void updateGraph(const fpreal t, CopyAttributesFunc func = 0);
+    /// Evaluate the Canvas graph
     void executeGraph();
 
     bool m_graphLoaded;
 
 private:
-    // MultiParams m_multiparms;
     FabricDFGView m_view;
     CanvasUI m_ui;
 };

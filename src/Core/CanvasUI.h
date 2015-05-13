@@ -13,6 +13,8 @@ namespace OpenSpliceHoudini
 
 class FabricDFGView;
 
+/// Manage the creation of the Canvas window and its "connection" with Houdini operator.
+/// Any custom operator integrating Fabric DFG got a CanvasUI member.
 class CanvasUI
 {
 

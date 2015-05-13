@@ -36,7 +36,7 @@ struct HouToFabAttributeTraits
         catch (FabricCore::Exception e)
         {
             FabricCore::Exception::Throw(
-                (std::string("[SOP_FabricDFGDeformer::CreatePolygonMeshRTVal]: ") + e.getDesc_cstr()).c_str());
+                (std::string("[SOP_FabricDeformer::CreatePolygonMeshRTVal]: ") + e.getDesc_cstr()).c_str());
         }
     }
 };
