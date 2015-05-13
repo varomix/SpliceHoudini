@@ -9,6 +9,8 @@
 namespace OpenSpliceHoudini
 {
 
+/// Create geometry from a Canvas graph. Only PolygonMesh type supported for the moment.
+/// For each output port of type PolygonMesh, the geometry will be copied to the Houdini geo detail
 class SOP_FabricGenerator : public FabricDFGOP<SOP_Node>
 {
 public:

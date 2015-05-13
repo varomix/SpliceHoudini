@@ -12,6 +12,13 @@
 namespace OpenSpliceHoudini
 {
 
+/// Deform the input geometry (only Houdini polymesh types are supported for the moment!)
+/// To see the deformation result in Houdini, the Canvas graph need one output port of type PolygonMesh
+/// For portability convenience (and to give access to the topology) from inside the Canvas graph,
+/// the deformer does not only copy geometry input points but the whole polygonal topology.
+/// The drawback is that it will not be as fast as using just external arrays for each Houdini
+/// attributes we would like to modify. Such efficient modifier could be implemented in an other 
+/// SOP node in the futur (a SOP_AttributeModifier if you will).
 class SOP_FabricDeformer : public FabricDFGOP<SOP_Node>
 {
     template <typename T>
