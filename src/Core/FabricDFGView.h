@@ -138,6 +138,13 @@ protected:
     {
     }
 
+    virtual void onPinTypeChanged(FabricServices::DFGWrapper::PinPtr pin, FabricCore::DFGPortType pinType)
+    {
+    }
+    virtual void onPortTypeChanged(FabricServices::DFGWrapper::PortPtr port, FabricCore::DFGPortType portType)
+    {
+    }
+
 private:
     static void logFunc(void* userData, const char* message, unsigned int length);
 
