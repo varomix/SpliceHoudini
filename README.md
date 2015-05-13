@@ -14,6 +14,11 @@ OpenSpliceHoudini.0.3.0 is tested using:
 
 I'm assuming both FabricEngine-2.0 and FabricUI are copied under a FABRIC_PARENT_DIR directory.
 
+TEMPORARY:
+You will need to add additional DCC methods from SpliceHoudini/Ext/SpliceHoudiniUtils.kl into your FabricEngine-2.0/Exts/Builtin/Geometry/PolygonMesh/PolygonMeshDCCConversion.kl.
+This is a very temporary thing until similar methods will be distributed with Fabric installs soon!
+
+
 Launch Houdini shell to get the Houdini environment (on Mac, ctrl + space > Houdini Terminal)
 
 Then run those lines:
