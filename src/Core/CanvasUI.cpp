@@ -1,3 +1,5 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
+
 #include "CanvasUI.h"
 #include "FabricDFGView.h"
 #include "FabricDFGWidget.h"
@@ -13,9 +15,8 @@ namespace OpenSpliceHoudini
 
 void CanvasUI::show()
 {
-    // // qApp->aboutQt();
-    // QWidget* parent = RE_QtWindow::mainQtWindow(); // NOT WORKING
-    QWidget* parent = 0; // WORKING, the new widget will be a window as specified in Qt Doc
+    // Null ptr to get the new widget as a window
+    QWidget* parent = 0;
     FabricDFGWidgetPtr dfgw(new FabricDFGWidget(parent, &m_view));
     dfgw->setOp(m_op);
     m_view.setWidget(dfgw);
@@ -25,4 +26,4 @@ void CanvasUI::show()
     dfgw->show();
     dfgw->activateWindow();
 }
-}
+} // End namespace OpenSpliceHoudini

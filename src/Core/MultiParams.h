@@ -1,3 +1,5 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
+
 #ifndef __MultiParams_H_
 #define __MultiParams_H_
 
@@ -133,7 +135,6 @@ public:
 private:
     static int addInstance(OP_Parameters* op, const std::string& multiParmName, const std::string& name);
     static bool removeInstance(OP_Parameters* op, const std::string& multiParmTypeName, const std::string& name);
-
 
     static PRM_Default portDefaultName;
     static PRM_Range indexRange;

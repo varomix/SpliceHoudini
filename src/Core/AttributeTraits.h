@@ -1,3 +1,5 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
+
 #ifndef __ATTRIBUTETRAITS_H__
 #define __ATTRIBUTETRAITS_H__
 

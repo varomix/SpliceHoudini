@@ -1,3 +1,4 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
 
 #ifndef _FABRICDFGWIDGET_H_
 #define _FABRICDFGWIDGET_H_
@@ -37,8 +38,7 @@ public:
     ~FabricDFGWidget();
 
     void setOp(OP_Node* op);
-    static FabricDFGWidget*
-    getWidgetforDFGView(FabricDFGView* view, bool createNewIfNoneFound = true);
+    static FabricDFGWidget* getWidgetforDFGView(FabricDFGView* view, bool createNewIfNoneFound = true);
 
 public slots:
     virtual void onRecompilation();

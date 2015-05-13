@@ -1,3 +1,5 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
+
 #ifndef __PARAMETERFACTORY_H__
 #define __PARAMETERFACTORY_H__
 

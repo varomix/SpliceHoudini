@@ -1,3 +1,4 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
 
 #include "FabricDFGWidget.h"
 #include "FabricDFGView.h"

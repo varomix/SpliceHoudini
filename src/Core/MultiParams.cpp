@@ -1,3 +1,5 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
+
 #include "MultiParams.h"
 #include <PRM/PRM_Include.h>
 #include <SOP/SOP_Node.h>
@@ -137,7 +139,7 @@ bool MultiParams::removeInstance(OP_Parameters* op, const std::string& name)
     {
         removed = MultiParams::removeInstance(op, "Vec3", name);
     }
-    return removed;   
+    return removed;
 }
 
 void MultiParams::renameInstance(OP_Parameters* op,

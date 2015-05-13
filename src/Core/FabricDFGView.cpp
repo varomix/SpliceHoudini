@@ -1,3 +1,5 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
+
 #include "FabricDFGView.h"
 #include "MultiParams.h"
 #include "ParameterFactory.h"

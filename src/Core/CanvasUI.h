@@ -1,3 +1,5 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
+
 #ifndef __UI__
 #define __UI__
 
@@ -26,5 +28,5 @@ private:
     OP_Node* m_op;
     FabricDFGView& m_view;
 };
-}
+} // End namespace OpenSpliceHoudini
 #endif // __UI__

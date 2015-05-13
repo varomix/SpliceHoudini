@@ -1,3 +1,5 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
+
 #include "SOP_FabricDFG.h"
 
 #include <GU/GU_Detail.h>
@@ -48,7 +50,7 @@ OP_ERROR SOP_FabricDFG::cookMySop(OP_Context& context)
         fpreal now = context.getTime();
         updateGraph(now);
         executeGraph();
-        
+
         gdp->clearAndDestroy();
 
         const FabricServices::DFGWrapper::PortList polyMeshOutputPorts = getView().getPolygonMeshOutputPorts();

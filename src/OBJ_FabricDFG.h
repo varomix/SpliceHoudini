@@ -1,3 +1,4 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
 
 #ifndef __OBJ_FABRICSDFG_H__
 #define __OBJ_FABRICSDFG_H__

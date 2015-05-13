@@ -1,3 +1,4 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
 
 #ifndef __SOP_FABRICSDFGDEFORMER_H__
 #define __SOP_FABRICSDFGDEFORMER_H__

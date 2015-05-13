@@ -1,3 +1,4 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
 
 #ifndef __FabricDFGOP_H__
 #define __FabricDFGOP_H__
@@ -29,7 +30,6 @@ template <typename OP>
 class FabricDFGOP : public OP
 {
 public:
-
     FabricDFGOP(OP_Network* net, const char* name, OP_Operator* op);
 
     // static PRM_Name groupName;
@@ -61,7 +61,7 @@ public:
     static PRM_Template myTemplateList[];
 
     UT_String getStringValue(const char* name, fpreal t = 0) const;
-    
+
 protected:
     void setStringValue(const UT_String& value, const char* name, fpreal t = 0);
 
@@ -70,7 +70,7 @@ protected:
         return m_view;
     }
 
-    void updateGraph(const fpreal t, CopyAttributesFunc func=0);
+    void updateGraph(const fpreal t, CopyAttributesFunc func = 0);
     void executeGraph();
 
     bool m_graphLoaded;
@@ -79,7 +79,6 @@ private:
     // MultiParams m_multiparms;
     FabricDFGView m_view;
     CanvasUI m_ui;
-
 };
 
 } // End namespace OpenSpliceHoudini

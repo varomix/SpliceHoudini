@@ -1,3 +1,5 @@
+// Copyright (c) 2015, Guillaume Laforge. All rights reserved.
+
 #include "OBJ_FabricDFG.h"
 
 #include <PRM/PRM_Include.h>
