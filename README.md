@@ -3,6 +3,8 @@
 Open source version of Fabric Splice for SideFx Houdini
 Only tested on OSX for now (but should work on Linux too).
 
+Here is a short video showing it in action: https://vimeo.com/127362431
+
 For access to the Fabric 2.0 Beta, you’ll want to sign up to this group:
 https://groups.google.com/forum/?hl=en#!forum/fabric-engine-beta
 
