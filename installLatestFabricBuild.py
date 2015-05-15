@@ -1,3 +1,4 @@
+# Quick and (very) dirty script to get the latest Fabric build
 import os
 import urllib2
 from urllib2 import HTTPError, URLError
