@@ -20,6 +20,9 @@ OpenSpliceHoudini.0.4.0 is tested using:
 I'm assuming both FabricEngine-2.0 and FabricUI are copied under a FABRIC_PARENT_DIR directory.
 You will need Qt 4.8 to build FabricUI.
 
+# FabricUI add -fPIC flag in the Linux section
+env.Append(CXXFLAGS = ['-fPIC'])
+
 # TEMPORARY
 
 You will need to add additional DCC methods from SpliceHoudini/Ext/SpliceHoudiniUtils.kl into your FabricEngine-2.0/Exts/Builtin/Geometry/PolygonMesh/PolygonMeshDCCConversion.kl.

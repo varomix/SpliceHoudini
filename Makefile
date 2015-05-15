@@ -1,5 +1,8 @@
 VERSION = 0.4.0
-DSONAME = OpenSpliceHoudini.${VERSION}.dylib
+#OSX
+#DSONAME = OpenSpliceHoudini.${VERSION}.dylib
+#Linux
+DSONAME = OpenSpliceHoudini.${VERSION}.so
 
 WIDGET := FabricDFGWidget
 
@@ -20,13 +23,12 @@ INCDIRS = -I${FABRIC_DIR}/include/
 INCDIRS += -I${FABRIC_DIR}/include/FabricServices
 
 LIBDIRS = -L${FABRIC_DIR}/lib
-LIBS = -lFabricCore.2.0 -lFabricServices -lFabricSplitSearch -ldl -lpthread
 
 FABRIC_UI_PATH = ${FABRIC_DIR}/../FabricUI/stage
 INCDIRS += -I${FABRIC_UI_PATH}/include/FabricUI
 INCDIRS += -I${FABRIC_UI_PATH}/include
 LIBDIRS += -L${FABRIC_UI_PATH}/lib
-LIBS += -lFabricUI
+LIBS += -lFabricUI -lFabricCore -lFabricServices -lFabricSplitSearch -ldl -lpthread
 
 INCDIRS += -I${HFS}/toolkit/include/OpenEXR/
 
