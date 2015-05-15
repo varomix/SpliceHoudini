@@ -26,14 +26,14 @@ class OP_SOP_FabricGenerator : public OP_Operator
 {
 public:
     OP_SOP_FabricGenerator()
-        : OP_Operator("fabricGenerator",             // Internal name
-                      "Fabric Generator",            // UI name
+        : OP_Operator("fabricGenerator",                   // Internal name
+                      "Fabric Generator",                  // UI name
                       SOP_FabricGenerator::myConstructor,  // How to build the SOP
                       SOP_FabricGenerator::myTemplateList, // My parameters
-                      0,                             // Min # of node inputs
-                      0,                             // Max # of node inputs
-                      0,                             // Local variables
-                      OP_FLAG_GENERATOR)             // Flag it as generator
+                      0,                                   // Min # of node inputs
+                      0,                                   // Max # of node inputs
+                      0,                                   // Local variables
+                      OP_FLAG_GENERATOR)                   // Flag it as generator
     {
     }
 };

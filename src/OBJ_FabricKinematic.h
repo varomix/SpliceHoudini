@@ -9,7 +9,7 @@
 namespace OpenSpliceHoudini
 {
 
-/// An simple example of Fabric Canvas integration on Houdini Objects
+/// An simple example of Fabric Canvas integration for Houdini Objects
 /// It will set the object transform if the Canvas graph got output ports
 /// of type Vec3 called "t", "r" or "s" to set translation, rotation and scale  
 class OBJ_FabricKinematic : public FabricDFGOP<OBJ_Geometry>

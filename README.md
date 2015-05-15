@@ -14,8 +14,8 @@ You will need Houdini, Fabric 2.0 and FabricUI
 
 OpenSpliceHoudini.0.4.0 is tested using:
 * Houdini 14.0.223
-* FabricEngine 2.0 build "FabricEngine-pablo-Darwin-x86_64-20150513-150126"
-* FabricUI commit number "91e27ea1f8124f1b95bd74cab7defa099dadddd1"
+* FabricEngine 2.0 build "FabricEngine-pablo-Darwin-x86_64-20150514-182019"
+* FabricUI commit number "d84cc214d9f0cb6cba874be427e06bb8d8c7c2c0"
 
 I'm assuming both FabricEngine-2.0 and FabricUI are copied under a FABRIC_PARENT_DIR directory.
 You will need Qt 4.8 to build FabricUI.

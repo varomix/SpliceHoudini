@@ -13,11 +13,12 @@ namespace OpenSpliceHoudini
 {
 
 /// Deform the input geometry (only Houdini polymesh types are supported for the moment!)
-/// To see the deformation result in Houdini, the Canvas graph need one output port of type PolygonMesh
-/// For portability convenience (and to give access to the topology) from inside the Canvas graph,
-/// the deformer does not only copy geometry input points but the whole polygonal topology.
-/// The drawback is that it will not be as fast as using just external arrays for each Houdini
-/// attributes we would like to modify. Such efficient modifier could be implemented in an other 
+/// To see the deformation result in Houdini, the Canvas graph need an output port of type PolygonMesh
+/// For portability convenience and to give access to the topology from inside the Canvas graph,
+/// the deformer does not only copy geometry input points but the whole polygonal topology
+/// opening the door to much more deformation algorithm.
+/// The drawback is that it will not be as fast as just using external arrays for each Houdini
+/// attributes to modify. Such efficient modifier could be implemented in an other
 /// SOP node in the futur (a SOP_AttributeModifier if you will).
 class SOP_FabricDeformer : public FabricDFGOP<SOP_Node>
 {
@@ -62,14 +63,32 @@ private:
     static FabricCore::RTVal CreatePolygonMeshRTVal(const GU_Detail& gdpRef, SOP_FabricDeformer& sopDeformerNode);
     void setPointsPositions(OP_Context& context);
 
-    void addIntegerBuffer(const size_t size) { m_integerBuffers.create(size); }
-    int* getIntegerBuffer() { return m_integerBuffers.get(); }
+    void addIntegerBuffer(const size_t size)
+    {
+        m_integerBuffers.create(size);
+    }
+    int* getIntegerBuffer()
+    {
+        return m_integerBuffers.get();
+    }
 
-    void addFloatBuffer(const size_t size) { m_floatBuffers.create(size); }
-    float* getFloatBuffer() { return m_floatBuffers.get(); }
+    void addFloatBuffer(const size_t size)
+    {
+        m_floatBuffers.create(size);
+    }
+    float* getFloatBuffer()
+    {
+        return m_floatBuffers.get();
+    }
 
-    void addVec3Buffer(const size_t size) { m_vec3Buffers.create(size); }
-    UT_Vector3F* getVec3Buffer() { return m_vec3Buffers.get(); }
+    void addVec3Buffer(const size_t size)
+    {
+        m_vec3Buffers.create(size);
+    }
+    UT_Vector3F* getVec3Buffer()
+    {
+        return m_vec3Buffers.get();
+    }
 
     ManagedBuffer<int> m_integerBuffers;
     ManagedBuffer<float> m_floatBuffers;
@@ -80,12 +99,12 @@ class OP_SOP_FabricDeformer : public OP_Operator
 {
 public:
     OP_SOP_FabricDeformer()
-        : OP_Operator("fabricDeformer",                            // Internal name
-                      "Fabric Deformer",                           // UI name
+        : OP_Operator("fabricDeformer",                         // Internal name
+                      "Fabric Deformer",                        // UI name
                       SOP_FabricDeformer::myConstructor,        // How to build the SOP
                       SOP_FabricDeformer::buildTemplatePair(0), // My parameters
-                      1,                                           // Min # of node inputs
-                      4)                                           // Max # of node inputs
+                      1,                                        // Min # of node inputs
+                      4)                                        // Max # of node inputs
     {
     }
 };

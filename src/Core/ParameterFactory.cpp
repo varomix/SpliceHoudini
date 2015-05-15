@@ -36,7 +36,6 @@ void ParameterFactory::RegisterTypes()
     ParameterFactory::RegisterParameter(std::string("SInt32"), MultiParams::addSInt32Parameter);
     ParameterFactory::RegisterParameter(std::string("UInt32"), MultiParams::addUInt32Parameter);
     ParameterFactory::RegisterParameter(std::string("Integer"), MultiParams::addIntegerParameter);
-    ParameterFactory::RegisterParameter(std::string("Integer"), MultiParams::addIntegerParameter);
     ParameterFactory::RegisterParameter(std::string("Index"), MultiParams::addIndexParameter);
     ParameterFactory::RegisterParameter(std::string("Size"), MultiParams::addSizeParameter);
     ParameterFactory::RegisterParameter(std::string("Count"), MultiParams::addCountParameter);
