@@ -1,8 +1,13 @@
 VERSION = 0.4.0
-#OSX
-#DSONAME = OpenSpliceHoudini.${VERSION}.dylib
-#Linux
-DSONAME = OpenSpliceHoudini.${VERSION}.so
+
+uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
+ifeq (${uname_S},Linux)
+	EXT = so
+else ifeq (${uname_S},Darwin)
+	EXT = dylib
+endif
+
+DSONAME = ${DSOSTEM}.${VERSION}.${EXT}
 
 WIDGET := FabricDFGWidget
 
